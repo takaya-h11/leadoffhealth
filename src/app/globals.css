@@ -22,5 +22,225 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* スムーズなスクロール */
+html {
+  scroll-behavior: smooth;
+}
+
+/* react-big-calendar カスタムスタイル */
+.rbc-calendar {
+  font-family: var(--font-geist-sans);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.rbc-header {
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.rbc-today {
+  background: linear-gradient(to bottom right, #eff6ff, #dbeafe);
+}
+
+.rbc-event {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  border: none;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.rbc-event:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.rbc-event:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.rbc-day-bg:hover {
+  background-color: #f9fafb;
+}
+
+.rbc-selected {
+  background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+}
+
+/* カスタムアニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* グラデーションテキスト */
+.gradient-text {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ガラスモーフィズム効果 */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* モダンなシャドウ */
+.shadow-modern {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-modern-lg {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #94a3b8, #64748b);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #64748b, #475569);
+}
+
+/* 選択時のハイライト */
+::selection {
+  background-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+::-moz-selection {
+  background-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+/* フォーカス時のアウトライン */
+*:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* react-big-calendar agendaビューのスタイル修正 */
+.rbc-agenda-view {
+  overflow-x: auto;
+}
+
+.rbc-agenda-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.rbc-agenda-date-cell {
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.rbc-agenda-time-cell {
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.rbc-agenda-event-cell {
+  width: auto;
+  padding: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  vertical-align: top;
+}
+
+/* agendaビューのヘッダー */
+.rbc-agenda-view thead > tr > th {
+  padding: 12px 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: left;
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* agendaビューの行 */
+.rbc-agenda-view tbody > tr > td {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* agendaビューの行ホバー */
+.rbc-agenda-view tbody > tr:hover > td {
+  background-color: #f9fafb;
 }

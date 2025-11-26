@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500" width="200" height="500">
+  <!-- Left side view of human body silhouette -->
+  <g id="body-left" fill="none" stroke="#333" stroke-width="2">
+    <!-- Head (side) -->
+    <ellipse cx="100" cy="40" rx="22" ry="30" data-part="HEAD_LEFT"/>
+    <!-- Face profile -->
+    <path d="M 122 35 Q 130 40, 130 45 Q 130 50, 125 52" stroke="#333" stroke-width="1.5" data-part="FACE_LEFT"/>
+
+    <!-- Neck -->
+    <line x1="95" y1="70" x2="95" y2="90" data-part="NECK_LEFT"/>
+
+    <!-- Shoulder -->
+    <path d="M 95 90 Q 80 85, 70 95" data-part="SHOULDER_LEFT"/>
+
+    <!-- Arm -->
+    <line x1="70" y1="95" x2="65" y2="200" data-part="UPPER_ARM_LEFT"/>
+    <line x1="65" y1="200" x2="60" y2="280" data-part="FOREARM_LEFT"/>
+    <ellipse cx="60" cy="290" rx="8" ry="12" data-part="HAND_LEFT"/>
+
+    <!-- Torso (side view) -->
+    <!-- Front line -->
+    <path d="M 100 90 Q 110 140, 112 200 Q 110 240, 105 270" data-part="FRONT_TORSO_LEFT"/>
+
+    <!-- Back line -->
+    <path d="M 90 90 Q 85 140, 85 200 Q 87 240, 92 270" data-part="BACK_TORSO_LEFT"/>
+
+    <!-- Chest -->
+    <line x1="90" y1="120" x2="100" y2="120" data-part="CHEST_LEFT"/>
+
+    <!-- Abdomen -->
+    <line x1="87" y1="200" x2="110" y2="200" data-part="ABDOMEN_LEFT"/>
+
+    <!-- Hip/Buttocks -->
+    <path d="M 92 270 Q 85 285, 90 300" data-part="HIP_LEFT"/>
+    <path d="M 105 270 Q 108 285, 107 300" data-part="HIP_FRONT_LEFT"/>
+
+    <!-- Leg -->
+    <line x1="98" y1="300" x2="95" y2="400" data-part="THIGH_LEFT"/>
+    <line x1="95" y1="400" x2="92" y2="480" data-part="LOWER_LEG_LEFT"/>
+    <path d="M 92 480 L 85 490 L 100 492 L 92 490 Z" fill="#333" data-part="FOOT_LEFT"/>
+  </g>
+</svg>

@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "mcp__supabase__get_project",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run dev:*)",
+      "Bash(ls:*)",
+      "mcp__playwright__browser_navigate",
+      "Bash(explorer.exe \"C:\\dev\\projects\\leadoffhealth\\docs\")",
+      "Bash(cat:*)",
+      "mcp__playwright__browser_click",
+      "Bash(grep:*)",
+      "Bash(find src/app/(protected)/therapist -type f ( -name \"*.tsx\" -o -name \"*.ts\" ) -exec sed -i \"s/role !== ''therapist''/role !== ''therapist'' \\&\\& role !== ''admin''/g\" {} +)",
+      "Bash(npx supabase:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then grep \"SERVICE_ROLE\" .env)",
+      "Bash(else echo \"No .env file\")",
+      "Bash(fi)",
+      "Bash(wc:*)",
+      "Bash(tail:*)",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__initial_instructions",
+      "mcp__serena__activate_project",
+      "mcp__serena__find_file",
+      "mcp__serena__list_dir",
+      "Bash(node scripts/cleanup-orphaned-users.mjs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase",
+    "playwright",
+    "github"
+  ]
+}
