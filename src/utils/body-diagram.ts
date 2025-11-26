@@ -64,7 +64,8 @@ export const dataURLtoBlob = (dataURL: string): Blob => {
 export const uploadBodyDiagramImage = async (
   blob: Blob,
   treatmentRecordId: string,
-  supabaseClient: { storage: { from: (bucket: string) => { upload: (path: string, file: Blob, options: { contentType: string }) => Promise<{ data: unknown; error: unknown }> } } }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseClient: any
 ): Promise<string> => {
   const filename = `body-diagrams/${treatmentRecordId}-${Date.now()}.png`;
 
@@ -76,7 +77,7 @@ export const uploadBodyDiagramImage = async (
     });
 
   if (error) {
-    throw new Error(`Failed to upload image: ${error.message}`);
+    throw new Error(`Failed to upload image: ${(error as { message?: string }).message || 'Unknown error'}`);
   }
 
   // Get public URL

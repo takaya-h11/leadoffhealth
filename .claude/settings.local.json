@@ -25,7 +25,8 @@
       "mcp__serena__activate_project",
       "mcp__serena__find_file",
       "mcp__serena__list_dir",
-      "Bash(node scripts/cleanup-orphaned-users.mjs:*)"
+      "Bash(node scripts/cleanup-orphaned-users.mjs:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

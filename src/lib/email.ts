@@ -343,10 +343,16 @@ export async function sendReminderEmail(
   role: '整体師' | '法人担当者',
   appointment: {
     employee_name: string;
+    employee_id?: string;
     available_slots: {
       start_time: string;
       end_time: string;
       service_menus: { name: string };
+      therapists?: {
+        users: {
+          full_name: string;
+        };
+      };
     };
     companies: { name: string };
   }

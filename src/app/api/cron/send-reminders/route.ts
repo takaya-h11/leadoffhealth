@@ -80,8 +80,11 @@ export async function GET(request: NextRequest) {
         const company = Array.isArray(appointment.companies)
           ? appointment.companies[0]
           : appointment.companies
+        const serviceMenu = Array.isArray(slot?.service_menus)
+          ? slot.service_menus[0]
+          : slot?.service_menus
 
-        if (!therapistUser || !companyUser || !slot) {
+        if (!therapistUser || !companyUser || !slot || !serviceMenu) {
           console.error('Missing data for appointment:', appointment.id)
           continue
         }
@@ -91,7 +94,9 @@ export async function GET(request: NextRequest) {
           ...appointment,
           companies: company,
           available_slots: {
-            ...slot,
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+            service_menus: serviceMenu,
             therapists: {
               users: therapistUser,
             },
@@ -119,7 +124,9 @@ export async function GET(request: NextRequest) {
             ...appointment,
             companies: company,
             available_slots: {
-              ...slot,
+              start_time: slot.start_time,
+              end_time: slot.end_time,
+              service_menus: serviceMenu,
               therapists: {
                 users: therapistUser,
               },
