@@ -368,12 +368,9 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
         const therapist = Array.isArray(slotInfo.therapists) ? slotInfo.therapists[0] : slotInfo.therapists
         const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
 
-        console.log('Cancellation notification - therapist user ID:', therapistUser?.id)
-
         // アプリ内通知を作成
         if (therapistUser?.id) {
           const startTime = new Date(slotInfo.start_time)
-          console.log('Creating cancellation notification for therapist:', therapistUser.id)
           await createNotification(
             therapistUser.id,
             'appointment_cancelled',
@@ -387,7 +384,6 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
             })}の予約がキャンセルされました（社員: ${appointment.employee_name}様）`,
             appointmentId
           )
-          console.log('Cancellation notification created successfully')
         } else {
           console.error('Therapist user ID not found in slot info')
         }

@@ -12,8 +12,6 @@ export async function createNotification(
 ) {
   const supabase = await createClient()
 
-  console.log('createNotification called:', { userId, type, title, appointmentId })
-
   try {
     const { error } = await supabase.from('notifications').insert({
       user_id: userId,
@@ -32,8 +30,6 @@ export async function createNotification(
         details: error.details,
         hint: error.hint,
       })
-    } else {
-      console.log('Notification created successfully:', { userId, type, title })
     }
   } catch (error) {
     console.error('Unexpected error creating notification:', error)
