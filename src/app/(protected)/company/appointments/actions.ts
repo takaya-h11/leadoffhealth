@@ -330,7 +330,58 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
       console.error('Slot update error:', slotError)
     }
 
-    // TODO: 整体師にキャンセル通知を送信（028で実装）
+    // 整体師にキャンセル通知を送信
+    try {
+      // 整体師情報と法人情報を取得
+      const { data: slotInfo } = await supabase
+        .from('available_slots')
+        .select(`
+          start_time,
+          therapist_id,
+          therapists (
+            user_id,
+            users (
+              id,
+              email,
+              full_name
+            )
+          )
+        `)
+        .eq('id', slotId)
+        .single()
+
+      const { data: companyInfo } = await supabase
+        .from('companies')
+        .select('name')
+        .eq('id', appointment.company_id)
+        .single()
+
+      if (slotInfo && companyInfo) {
+        const therapist = Array.isArray(slotInfo.therapists) ? slotInfo.therapists[0] : slotInfo.therapists
+        const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
+
+        // アプリ内通知を作成
+        if (therapistUser?.id) {
+          const startTime = new Date(slotInfo.start_time)
+          await createNotification(
+            therapistUser.id,
+            'appointment_cancelled',
+            '予約がキャンセルされました',
+            `${companyInfo.name}の${startTime.toLocaleDateString('ja-JP', {
+              month: 'long',
+              day: 'numeric',
+            })} ${startTime.toLocaleTimeString('ja-JP', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}の予約がキャンセルされました（社員: ${appointment.employee_name}様）`,
+            appointmentId
+          )
+        }
+      }
+    } catch (notificationError) {
+      console.error('Failed to send cancellation notification:', notificationError)
+      // 通知エラーは記録するが、キャンセル処理は継続
+    }
 
     revalidatePath('/company/appointments')
     revalidatePath('/company/schedule')

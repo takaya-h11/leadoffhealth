@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/server'
  */
 export async function createNotification(
   userId: string,
-  type: 'appointment_requested' | 'appointment_approved' | 'appointment_rejected' | 'reminder',
+  type: 'appointment_requested' | 'appointment_approved' | 'appointment_rejected' | 'appointment_cancelled' | 'reminder',
   title: string,
   message: string,
   appointmentId?: string
