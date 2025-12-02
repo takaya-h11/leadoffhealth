@@ -333,7 +333,7 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
     // 整体師にキャンセル通知を送信
     try {
       // 整体師情報と法人情報を取得
-      const { data: slotInfo } = await supabase
+      const { data: slotInfo, error: slotInfoError } = await supabase
         .from('available_slots')
         .select(`
           start_time,
@@ -350,19 +350,30 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
         .eq('id', slotId)
         .single()
 
-      const { data: companyInfo } = await supabase
+      if (slotInfoError) {
+        console.error('Failed to fetch slot info for cancellation notification:', slotInfoError)
+      }
+
+      const { data: companyInfo, error: companyInfoError } = await supabase
         .from('companies')
         .select('name')
         .eq('id', appointment.company_id)
         .single()
 
+      if (companyInfoError) {
+        console.error('Failed to fetch company info for cancellation notification:', companyInfoError)
+      }
+
       if (slotInfo && companyInfo) {
         const therapist = Array.isArray(slotInfo.therapists) ? slotInfo.therapists[0] : slotInfo.therapists
         const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
 
+        console.log('Cancellation notification - therapist user ID:', therapistUser?.id)
+
         // アプリ内通知を作成
         if (therapistUser?.id) {
           const startTime = new Date(slotInfo.start_time)
+          console.log('Creating cancellation notification for therapist:', therapistUser.id)
           await createNotification(
             therapistUser.id,
             'appointment_cancelled',
@@ -376,7 +387,12 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
             })}の予約がキャンセルされました（社員: ${appointment.employee_name}様）`,
             appointmentId
           )
+          console.log('Cancellation notification created successfully')
+        } else {
+          console.error('Therapist user ID not found in slot info')
         }
+      } else {
+        console.error('Missing slot info or company info for cancellation notification')
       }
     } catch (notificationError) {
       console.error('Failed to send cancellation notification:', notificationError)
