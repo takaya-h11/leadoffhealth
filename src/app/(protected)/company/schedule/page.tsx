@@ -19,115 +19,73 @@ export default async function CompanySchedulePage() {
     redirect('/dashboard')
   }
 
-  // 予約可能な空き枠と自社の予約を取得（今後3ヶ月分）
+  // カレンダー用ビューから空き枠と予約を取得（今後3ヶ月分）
   const threeMonthsLater = new Date()
   threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3)
 
-  // 1. 予約可能な空き枠を取得
-  const { data: availableSlots } = await supabase
-    .from('available_slots')
-    .select(`
-      *,
-      therapists (
-        id,
-        users (
-          full_name
-        )
-      ),
-      service_menus (
-        name,
-        duration_minutes,
-        price
-      )
-    `)
-    .eq('status', 'available')
+  // calendar_slots_for_users ビューを使用
+  // このビューは自動的にプライバシーフィルタリングを行う:
+  //   - 空き枠: company_id が NULL（全法人公開）または自社ID（自社専用）のみ表示
+  //   - 予約: 自社の予約のみ詳細表示、他社の予約は「予約済み」とだけ表示
+  const { data: calendarSlots } = await supabase
+    .from('calendar_slots_for_users')
+    .select('*')
     .gte('start_time', new Date().toISOString())
     .lte('start_time', threeMonthsLater.toISOString())
     .order('start_time')
 
-  // 2. 自社の予約（pending、booked、cancelled）を取得
-  const { data: companyAppointments } = await supabase
-    .from('appointments')
-    .select(`
-      *,
-      available_slots!inner (
-        id,
-        start_time,
-        end_time,
-        status,
-        therapist_id,
-        service_menu_id,
-        therapists:therapist_id (
-          id,
-          users:user_id (
-            full_name
-          )
-        ),
-        service_menus:service_menu_id (
-          name,
-          duration_minutes,
-          price
-        )
-      )
-    `)
-    .eq('company_id', userProfile.company_id)
-    .in('status', ['pending', 'approved', 'cancelled'])
-    .gte('available_slots.start_time', new Date().toISOString())
-    .lte('available_slots.start_time', threeMonthsLater.toISOString())
-
   // カレンダーイベント形式に変換
-  const availableEvents = availableSlots?.map((slot) => {
-    const therapist = Array.isArray(slot.therapists) ? slot.therapists[0] : slot.therapists
-    const serviceMenu = Array.isArray(slot.service_menus) ? slot.service_menus[0] : slot.service_menus
-    const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
-    const therapistName = therapistUser?.full_name || '不明'
+  const events = calendarSlots?.map((slot) => {
+    // ビューから取得したデータを使用
+    const therapistName = slot.therapist_name || '不明'
+    const serviceMenuName = slot.service_menu_name || '不明'
+    const companyName = slot.company_name // 自社の予約なら法人名、他社の予約なら「予約済み」、空き枠なら null
+    const userName = slot.user_name // 自社の予約のみ利用者名が入る、それ以外は null
+
+    // ステータスの判定
+    // slot.status は available_slots のステータス（available, booked, cancelled）
+    let status: 'available' | 'pending' | 'booked' | 'cancelled' = 'available'
+
+    if (companyName && userName) {
+      // 自社の予約（詳細あり）→ booked
+      status = 'booked'
+    } else if (companyName === '予約済み') {
+      // 他社の予約（「予約済み」としか表示されない）→ booked
+      status = 'booked'
+    } else if (slot.status === 'cancelled') {
+      // キャンセル済み
+      status = 'cancelled'
+    } else {
+      // 予約可能
+      status = 'available'
+    }
+
+    // タイトルの生成
+    let title = `${therapistName} - ${serviceMenuName}`
+    if (companyName && userName) {
+      // 自社の予約: 利用者名も表示
+      title = `${therapistName} - ${serviceMenuName} (${userName})`
+    } else if (companyName === '予約済み') {
+      // 他社の予約: 「予約済み」とだけ表示
+      title = `${therapistName} - ${serviceMenuName} (予約済み)`
+    }
 
     return {
-      id: `slot-${slot.id}`, // slotのIDにプレフィックスを付けてユニークにする
-      slotId: slot.id, // 予約用に元のslot IDも保持
-      title: `${therapistName} - ${serviceMenu?.name || '不明'}`,
+      id: `slot-${slot.slot_id}`,
+      slotId: slot.slot_id,
+      title,
       start: new Date(slot.start_time),
       end: new Date(slot.end_time),
       resource: {
         therapistName,
-        status: 'available' as const,
-        serviceMenuName: serviceMenu?.name || '不明',
-        price: serviceMenu?.price,
-        durationMinutes: serviceMenu?.duration_minutes,
+        status,
+        serviceMenuName,
+        companyName: companyName || undefined,
+        userName: userName || undefined,
+        durationMinutes: slot.duration_minutes,
       },
     }
   }) || []
-
-  const appointmentEvents = companyAppointments?.map((appointment) => {
-    const slot = Array.isArray(appointment.available_slots)
-      ? appointment.available_slots[0]
-      : appointment.available_slots
-    const therapist = Array.isArray(slot?.therapists) ? slot.therapists[0] : slot?.therapists
-    const serviceMenu = Array.isArray(slot?.service_menus) ? slot.service_menus[0] : slot?.service_menus
-    const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
-    const therapistName = therapistUser?.full_name || '不明'
-
-    // appointment.statusに基づいてslotのstatusを判断
-    let slotStatus: 'pending' | 'booked' | 'cancelled' = 'pending'
-    if (appointment.status === 'approved') slotStatus = 'booked'
-    else if (appointment.status === 'cancelled') slotStatus = 'cancelled'
-
-    return {
-      id: `appointment-${appointment.id}`, // appointmentのIDを使用してユニークにする
-      title: `${therapistName} - ${serviceMenu?.name || '不明'} (${appointment.employee_name})`,
-      start: new Date(slot?.start_time || ''),
-      end: new Date(slot?.end_time || ''),
-      resource: {
-        therapistName,
-        status: slotStatus,
-        serviceMenuName: serviceMenu?.name || '不明',
-        employeeName: appointment.employee_name,
-      },
-    }
-  }) || []
-
-  const events = [...availableEvents, ...appointmentEvents]
-    .sort((a, b) => a.start.getTime() - b.start.getTime())
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">

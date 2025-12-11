@@ -52,6 +52,10 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
           duration_minutes,
           price
         )
+      ),
+      users!appointments_user_id_fkey (
+        id,
+        full_name
       )
     `)
     .eq('company_id', userProfile.company_id)
@@ -74,7 +78,8 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
 
   // 検索（社員名・社員ID）
   if (params.search) {
-    query = query.or(`employee_name.ilike.%${params.search}%,employee_id.ilike.%${params.search}%`)
+    // 新しい予約フロー（user_id使用）と旧フロー（employee_name使用）の両方に対応
+    query = query.or(`employee_name.ilike.%${params.search}%,employee_id.ilike.%${params.search}%,users.full_name.ilike.%${params.search}%`)
   }
 
   const { data: appointments } = await query.order('created_at', { ascending: false }).limit(100)
@@ -219,7 +224,14 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
                       : appointment.available_slots
                     const therapist = Array.isArray(slot.therapists) ? slot.therapists[0] : slot.therapists
                     const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
+                    const appointmentUser = Array.isArray(appointment.users)
+                      ? appointment.users[0]
+                      : appointment.users
                     const startTime = new Date(slot.start_time)
+
+                    // 新旧フロー対応: user_id があればそちらを優先、なければ employee_name を使用
+                    const userName = appointmentUser?.full_name || appointment.employee_name || '不明'
+                    const userId = appointmentUser?.id || appointment.employee_id || '-'
 
                     return (
                       <tr key={appointment.id} className="hover:bg-gray-50">
@@ -236,8 +248,8 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
                           {therapistUser?.full_name || '不明'}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          <div>{appointment.employee_name}</div>
-                          <div className="text-gray-500">ID: {appointment.employee_id}</div>
+                          <div>{userName}</div>
+                          {appointmentUser?.id && <div className="text-xs text-gray-500">ID: {userId.slice(0, 8)}...</div>}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           {appointment.symptoms && appointment.symptoms.length > 0

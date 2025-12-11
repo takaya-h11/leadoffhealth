@@ -36,8 +36,6 @@ export async function createAppointment(formData: FormData) {
   }
 
   const slotId = formData.get('slot_id') as string
-  const employeeName = formData.get('employee_name') as string
-  const employeeId = formData.get('employee_id') as string
   const notes = formData.get('notes') as string
 
   // 症状の取得（複数選択）
@@ -47,7 +45,7 @@ export async function createAppointment(formData: FormData) {
   const redirectBasePath = isAdminBooking ? `/admin/book/${companyId}` : '/company/appointments'
 
   // バリデーション
-  if (!slotId || !employeeName || !employeeId) {
+  if (!slotId) {
     redirect(`${redirectBasePath}/new?slot=${slotId}&message=${encodeURIComponent('必須項目が入力されていません')}`)
   }
 
@@ -68,7 +66,7 @@ export async function createAppointment(formData: FormData) {
     redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
   }
 
-  // 最短予約期間のチェック（3日前まで）
+  // 最短予約期間のチェック（3日前まで）- 削除予定だが一旦残す
   const startTime = new Date(slot.start_time)
   const threeDaysLater = new Date()
   threeDaysLater.setDate(threeDaysLater.getDate() + 3)
@@ -91,11 +89,11 @@ export async function createAppointment(formData: FormData) {
     }
 
     // トランザクション: 空き枠のステータス更新と予約作成
-    // 1. 空き枠をpendingに更新（楽観的ロック）
+    // 1. 空き枠をbookedに更新（即時確定）
     const { error: updateError } = await supabase
       .from('available_slots')
       .update({
-        status: 'pending',
+        status: 'booked',
         updated_at: new Date().toISOString(),
       })
       .eq('id', slotId)
@@ -106,18 +104,17 @@ export async function createAppointment(formData: FormData) {
       redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
     }
 
-    // 2. 予約を作成
+    // 2. 予約を作成（即時承認）
     const { error: appointmentError } = await supabase
       .from('appointments')
       .insert({
         slot_id: slotId,
         company_id: companyId,
-        requested_by: user.id,
-        employee_name: employeeName.trim(),
-        employee_id: employeeId.trim(),
+        user_id: user.id,           // 新フィールド: 予約した利用者
+        requested_by: user.id,      // 互換性のため残す
         symptoms: symptomsArray,
         notes: notes || null,
-        status: 'pending',
+        status: 'approved',         // 即時承認
       })
 
     if (appointmentError) {
@@ -148,7 +145,7 @@ export async function createAppointment(formData: FormData) {
       .eq('company_id', companyId)
       .single()
 
-    // 整体師に通知を送信
+    // 整体師に予約確定通知を送信（承認不要のため、確定通知に変更）
     try {
       // 整体師情報を取得
       const { data: slotInfo } = await supabase
@@ -175,44 +172,34 @@ export async function createAppointment(formData: FormData) {
         .eq('id', companyId)
         .single()
 
+      // 予約した利用者の情報を取得
+      const { data: userData } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', user.id)
+        .single()
+
       if (slotInfo && companyInfo) {
         const therapist = Array.isArray(slotInfo.therapists) ? slotInfo.therapists[0] : slotInfo.therapists
         const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
 
-        // メール通知を送信
-        if (therapistUser?.email) {
-          await sendAppointmentRequestEmail(
-            therapistUser.email,
-            therapistUser.full_name || '整体師',
-            {
-              startTime: slotInfo.start_time,
-              endTime: slotInfo.end_time,
-              companyName: companyInfo.name,
-              employeeName: employeeName.trim(),
-              employeeId: employeeId.trim(),
-              symptoms: symptomsArray,
-              notes: notes || undefined,
-            }
-          )
-        }
-
-        // アプリ内通知を作成
+        // アプリ内通知を作成（予約確定通知）
         if (therapist?.user_id) {
           const startTime = new Date(slotInfo.start_time)
           await createNotification(
             therapist.user_id,
-            'appointment_requested',
-            '新しい予約申込',
-            `${companyInfo.name}から${startTime.toLocaleDateString('ja-JP', {
+            'appointment_approved',
+            '新しい予約が確定しました',
+            `${companyInfo.name}の${userData?.full_name || '利用者'}様 ${startTime.toLocaleDateString('ja-JP', {
               month: 'long',
               day: 'numeric',
-            })}の予約申込が届きました`,
+            })}の予約が確定しました`,
             createdAppointment?.id
           )
         }
       }
-    } catch (emailError) {
-      console.error('Failed to send notification:', emailError)
+    } catch (notificationError) {
+      console.error('Failed to send notification:', notificationError)
       // 通知エラーは記録するが、予約処理は継続
     }
 
@@ -222,8 +209,8 @@ export async function createAppointment(formData: FormData) {
     revalidatePath(`/admin/book/${companyId}`)
 
     const successPath = isAdminBooking
-      ? `/admin/appointments?message=${encodeURIComponent('success: 予約を申し込みました')}`
-      : `/company/appointments?message=${encodeURIComponent('success: 予約を申し込みました')}`
+      ? `/admin/appointments?message=${encodeURIComponent('success: 予約が確定しました')}`
+      : `/company/appointments?message=${encodeURIComponent('success: 予約が確定しました')}`
 
     redirect(successPath)
   } catch (error) {
@@ -281,24 +268,12 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
     redirect('/company/appointments?message=' + encodeURIComponent('この予約をキャンセルする権限がありません'))
   }
 
-  // ステータスチェック（pending または approved のみキャンセル可能）
-  if (appointment.status !== 'pending' && appointment.status !== 'approved') {
+  // ステータスチェック（approved のみキャンセル可能）
+  if (appointment.status !== 'approved') {
     redirect('/company/appointments?message=' + encodeURIComponent('この予約はキャンセルできません'))
   }
 
-  // キャンセル期限チェック（前日20時）
-  const slot = Array.isArray(appointment.available_slots)
-    ? appointment.available_slots[0]
-    : appointment.available_slots
-  const startTime = new Date(slot.start_time)
-  const deadline = new Date(startTime)
-  deadline.setDate(deadline.getDate() - 1)
-  deadline.setHours(20, 0, 0, 0)
-
-  const now = new Date()
-  if (now > deadline) {
-    redirect('/company/appointments?message=' + encodeURIComponent('キャンセル期限（前日20時）を過ぎています'))
-  }
+  // キャンセル期限チェックを削除（いつでもキャンセル可能）
 
   try {
     // 1. 予約をcancelledに更新
@@ -317,18 +292,8 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
       redirect('/company/appointments?message=' + encodeURIComponent('キャンセルに失敗しました'))
     }
 
-    // 2. 空き枠をavailableに戻す
-    const { error: slotError } = await supabase
-      .from('available_slots')
-      .update({
-        status: 'available',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', slotId)
-
-    if (slotError) {
-      console.error('Slot update error:', slotError)
-    }
+    // 2. 空き枠をavailableに戻す（トリガーが自動的に実行）
+    // release_slot_on_cancel_trigger が自動的にスロットを available に戻すため、手動更新は不要
 
     // 整体師にキャンセル通知を送信
     try {
@@ -368,6 +333,13 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
         const therapist = Array.isArray(slotInfo.therapists) ? slotInfo.therapists[0] : slotInfo.therapists
         const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
 
+        // 予約した利用者の情報を取得
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', appointment.user_id || appointment.requested_by)
+          .single()
+
         // アプリ内通知を作成
         if (therapistUser?.id) {
           const startTime = new Date(slotInfo.start_time)
@@ -375,13 +347,13 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
             therapistUser.id,
             'appointment_cancelled',
             '予約がキャンセルされました',
-            `${companyInfo.name}の${startTime.toLocaleDateString('ja-JP', {
+            `${companyInfo.name}の${userData?.full_name || '利用者'}様 ${startTime.toLocaleDateString('ja-JP', {
               month: 'long',
               day: 'numeric',
             })} ${startTime.toLocaleTimeString('ja-JP', {
               hour: '2-digit',
               minute: '2-digit',
-            })}の予約がキャンセルされました（社員: ${appointment.employee_name}様）`,
+            })}の予約がキャンセルされました`,
             appointmentId
           )
         } else {

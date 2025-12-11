@@ -79,6 +79,99 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Development Workflow
+
+このプロジェクトはGit-flowスタイルのブランチ戦略を採用しています。
+
+### Branch Strategy
+
+- **`main`** - 本番環境用ブランチ（Production）
+  - 常に安定した状態を保つ
+  - Vercelの本番環境にデプロイされる
+  - 直接pushは禁止（Pull Requestのみ）
+
+- **`develop`** - 開発用ブランチ（Development）
+  - 日々の開発はこのブランチで行う
+  - Vercelのプレビュー環境にデプロイされる
+  - 機能開発、バグ修正はここで実施
+
+### 開発手順
+
+1. **通常の開発作業**
+   ```bash
+   # developブランチで作業
+   git checkout develop
+   git pull origin develop
+
+   # 開発作業を実施
+   # ...
+
+   # コミット＆プッシュ
+   git add .
+   git commit -m "feat: 新機能の実装"
+   git push origin develop
+   ```
+
+2. **本番リリース**
+   ```bash
+   # mainブランチに切り替え
+   git checkout main
+   git pull origin main
+
+   # developブランチをマージ
+   git merge develop
+
+   # 本番環境にプッシュ
+   git push origin main
+   ```
+
+3. **緊急修正（Hotfix）**
+   ```bash
+   # mainブランチから直接修正
+   git checkout main
+   git pull origin main
+
+   # 修正を実施
+   # ...
+
+   git add .
+   git commit -m "fix: 緊急修正"
+   git push origin main
+
+   # developブランチにもマージ
+   git checkout develop
+   git merge main
+   git push origin develop
+   ```
+
+### 詳細な設定ガイド
+
+- 📘 **[GitHub ブランチ保護ルール設定ガイド](./docs/GITHUB_BRANCH_PROTECTION_SETUP.md)** - mainブランチを保護するための詳細な手順
+- 🚀 **[Vercel デプロイメント設定ガイド](./docs/VERCEL_DEPLOYMENT_SETUP.md)** - 本番環境とプレビュー環境のセットアップ方法
+
+## 🚨 Migration Status - **実施が必要です**
+
+**📊 [マイグレーション完了レポート](./MIGRATION_STATUS_REPORT.md)** - 予約フロー再設計と法人専用空き枠機能のマイグレーション状況
+
+### 重要: マイグレーション未実施
+
+エラー `column "company_id" does not exist` が発生しました。以下の手順でマイグレーションを実施してください:
+
+1. **📋 [マイグレーション実施手順](./docs/HOW_TO_RUN_MIGRATIONS.md)** を確認
+2. `scripts/check-migration-status.sql` で現在の状態を確認
+3. マイグレーションを実施（CLI または 手動でSQL実行）
+
+### 関連ドキュメント
+- 🚀 **[マイグレーション実施手順](./docs/HOW_TO_RUN_MIGRATIONS.md)** - 詳細な手順とトラブルシューティング
+- 📋 **[実装計画書](./docs/POST_MIGRATION_IMPLEMENTATION_PLAN.md)** - 残りの実装タスクと優先度
+- 🔧 **[マイグレーション後チェックリスト](./docs/POST_MIGRATION_CHECKLIST.md)** - データベース確認とテスト手順
+- 📝 **[予約フロー変更サマリー](./docs/BOOKING_FLOW_CHANGES_SUMMARY.md)** - 変更内容の詳細
+
+### 確認・移行スクリプト
+- `scripts/check-migration-status.sql` - マイグレーション状態の簡易確認（⚡ 最初に実行）
+- `scripts/verify-migration.sql` - マイグレーション状態の詳細確認
+- `scripts/migrate-existing-data.sql` - 既存データ移行（マイグレーション後に実行）
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

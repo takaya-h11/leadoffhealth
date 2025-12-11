@@ -55,6 +55,9 @@ export default async function SlotsListPage({
         duration_minutes,
         price
       ),
+      companies (
+        name
+      ),
       appointments (
         id,
         employee_name,
@@ -223,6 +226,10 @@ export default async function SlotsListPage({
                 ? slot.service_menus[0]
                 : slot.service_menus
 
+              const slotCompany = Array.isArray(slot.companies)
+                ? slot.companies[0]
+                : slot.companies
+
               return (
                 <div
                   key={slot.id}
@@ -254,6 +261,18 @@ export default async function SlotsListPage({
                           })}
                         </span>
                       </div>
+
+                      {/* 法人情報（専用枠の場合） */}
+                      {slotCompany && (
+                        <div className="mb-2 text-sm text-gray-700">
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                            <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                            </svg>
+                            {slotCompany.name} 専用
+                          </span>
+                        </div>
+                      )}
 
                       {/* 施術メニュー */}
                       {serviceMenu && (

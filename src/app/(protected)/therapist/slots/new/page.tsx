@@ -45,6 +45,13 @@ export default async function NewSlotPage({
     .eq('is_active', true)
     .order('duration_minutes')
 
+  // 全法人一覧を取得（法人専用枠を作成するため）
+  const { data: companies } = await supabase
+    .from('companies')
+    .select('id, name')
+    .eq('is_active', true)
+    .order('name')
+
   const params = await searchParams
   const message = params.message
 
@@ -74,6 +81,7 @@ export default async function NewSlotPage({
         <SlotForm
           therapistId={therapistData.id}
           serviceMenus={serviceMenus || []}
+          companies={companies || []}
         />
       </div>
     </div>

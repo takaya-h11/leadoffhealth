@@ -58,8 +58,13 @@ export default async function TherapistAllAppointmentsPage({ searchParams }: Pag
         notes,
         status,
         created_at,
+        user_id,
         companies (
           name
+        ),
+        users!appointments_user_id_fkey (
+          id,
+          full_name
         )
       )
     `)
@@ -191,6 +196,13 @@ export default async function TherapistAllAppointmentsPage({ searchParams }: Pag
                     const serviceMenu = Array.isArray(slot.service_menus)
                       ? slot.service_menus[0]
                       : slot.service_menus
+                    const appointmentUser = Array.isArray(appointment.users)
+                      ? appointment.users[0]
+                      : appointment.users
+
+                    // 新旧フロー対応: user_id があればそちらを優先、なければ employee_name を使用
+                    const userName = appointmentUser?.full_name || appointment.employee_name || '不明'
+                    const userId = appointmentUser?.id || appointment.employee_id || '-'
 
                     return (
                       <tr key={appointment.id} className="hover:bg-gray-50">
@@ -206,7 +218,7 @@ export default async function TherapistAllAppointmentsPage({ searchParams }: Pag
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <div>{company?.name || '不明'}</div>
                           <div className="text-gray-500">
-                            {appointment.employee_name} ({appointment.employee_id})
+                            {userName} {appointmentUser?.id && <span className="text-xs">(ID: {userId.slice(0, 8)}...)</span>}
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">

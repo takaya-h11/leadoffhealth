@@ -53,6 +53,7 @@ export default async function TherapistSchedulePage() {
         )
       )
     `)
+    .in('status', ['available', 'booked']) // キャンセル済みスロットを除外
     .gte('start_time', new Date().toISOString())
     .lte('start_time', threeMonthsLater.toISOString())
     .order('start_time')
@@ -67,12 +68,15 @@ export default async function TherapistSchedulePage() {
     const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
     const therapistName = therapistUser?.full_name || '不明'
 
-    // ステータスを判定（appointmentのstatusを優先）
-    let displayStatus: 'available' | 'pending' | 'booked' | 'cancelled' = slot.status as 'available' | 'pending' | 'booked' | 'cancelled'
-    if (appointment) {
-      if (appointment.status === 'pending') displayStatus = 'pending'
-      else if (appointment.status === 'approved') displayStatus = 'booked'
-      else if (appointment.status === 'cancelled') displayStatus = 'cancelled'
+    // ステータスを判定（approved/completed の予約のみ表示）
+    let displayStatus: 'available' | 'pending' | 'booked' | 'cancelled' = 'available'
+    if (appointment && (appointment.status === 'approved' || appointment.status === 'completed')) {
+      displayStatus = 'booked'
+    } else if (slot.status === 'booked') {
+      // 予約があるがキャンセル済みの場合は available として扱う
+      displayStatus = 'available'
+    } else {
+      displayStatus = slot.status as 'available' | 'pending' | 'booked' | 'cancelled'
     }
 
     let title = `${therapistName} - ${serviceMenu?.name || '不明'}`

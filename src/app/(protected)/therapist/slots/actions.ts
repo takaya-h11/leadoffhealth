@@ -41,6 +41,7 @@ export async function createAvailableSlot(formData: FormData): Promise<ActionRes
     // フォームデータ取得
     const therapistId = formData.get('therapist_id') as string
     const serviceMenuId = formData.get('service_menu_id') as string
+    const companyId = formData.get('company_id') as string | null
     const startDate = formData.get('start_date') as string
     const startHour = formData.get('start_hour') as string
     const startMinute = formData.get('start_minute') as string
@@ -117,6 +118,7 @@ export async function createAvailableSlot(formData: FormData): Promise<ActionRes
       .insert({
         therapist_id: therapistId,
         service_menu_id: serviceMenuId,
+        company_id: companyId || null, // 空文字列の場合はnullに変換
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         status: 'available',

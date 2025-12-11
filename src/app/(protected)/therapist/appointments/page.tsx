@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ApprovalButtons } from './approval-buttons'
+// import { ApprovalButtons } from './approval-buttons' // 承認機能廃止のためコメントアウト
 import { translateMessage } from '@/utils/messages'
 
 export default async function TherapistAppointmentsPage({
@@ -35,7 +35,7 @@ export default async function TherapistAppointmentsPage({
     redirect('/dashboard?message=' + encodeURIComponent('整体師情報が見つかりません'))
   }
 
-  // 自分宛のpendingとapproved予約を取得
+  // 自分宛のapproved予約を取得（pendingは廃止）
   const { data: slots } = await supabase
     .from('available_slots')
     .select(`
@@ -49,8 +49,7 @@ export default async function TherapistAppointmentsPage({
       ),
       appointments (
         id,
-        employee_name,
-        employee_id,
+        user_id,
         symptoms,
         notes,
         status,
@@ -58,14 +57,14 @@ export default async function TherapistAppointmentsPage({
         companies (
           name
         ),
-        users!requested_by (
+        users!appointments_user_id_fkey (
           full_name,
           email
         )
       )
     `)
     .eq('therapist_id', therapistId)
-    .in('appointments.status', ['pending', 'approved'])
+    .eq('appointments.status', 'approved')
     .order('start_time', { ascending: true })
 
   // appointmentsがあるスロットのみフィルター
@@ -96,8 +95,7 @@ export default async function TherapistAppointmentsPage({
           <div>
             <h1 className="text-3xl font-bold text-gray-900">予約管理</h1>
             <p className="mt-2 text-sm text-gray-600">
-              {appointments.filter(a => a.status === 'pending').length}件の予約が承認待ち、
-              {appointments.filter(a => a.status === 'approved').length}件が承認済み
+              {appointments.filter(a => a.status === 'approved').length}件の予約が確定しています
             </p>
           </div>
           <Link
@@ -126,14 +124,12 @@ export default async function TherapistAppointmentsPage({
             const company = Array.isArray(appointment.companies) ? appointment.companies[0] : appointment.companies
             const _requestedByUser = Array.isArray(appointment.users) ? appointment.users[0] : appointment.users
 
-            // ステータスに応じた色設定
-            const isPending = appointment.status === 'pending'
-            const _isApproved = appointment.status === 'approved'
-            const borderColor = isPending ? 'border-yellow-200' : 'border-blue-200'
-            const bgColor = isPending ? 'bg-yellow-50' : 'bg-blue-50'
-            const badgeBgColor = isPending ? 'bg-yellow-100' : 'bg-blue-100'
-            const badgeTextColor = isPending ? 'text-yellow-800' : 'text-blue-800'
-            const statusText = isPending ? '承認待ち' : '承認済み'
+            // ステータスに応じた色設定（承認済みのみ）
+            const borderColor = 'border-blue-200'
+            const bgColor = 'bg-blue-50'
+            const badgeBgColor = 'bg-blue-100'
+            const badgeTextColor = 'text-blue-800'
+            const statusText = '予約確定'
 
             return (
               <div
@@ -182,7 +178,7 @@ export default async function TherapistAppointmentsPage({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <span>
-                          {appointment.employee_name}（ID: {appointment.employee_id}）
+                          {_requestedByUser?.full_name || '利用者'}
                         </span>
                       </div>
 
@@ -218,9 +214,7 @@ export default async function TherapistAppointmentsPage({
                     </div>
                   </div>
 
-                  {isPending && (
-                    <ApprovalButtons appointmentId={appointment.id} slotId={appointment.slot_id} />
-                  )}
+                  {/* 承認ボタンは削除（即時確定のため不要） */}
                 </div>
               </div>
             )

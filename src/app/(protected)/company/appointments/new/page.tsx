@@ -21,7 +21,7 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
   // 法人担当者権限チェック
   const { data: userProfile } = await supabase
     .from('users')
-    .select('role, company_id')
+    .select('role, company_id, full_name')
     .eq('id', user.id)
     .single()
 
@@ -120,34 +120,14 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
           <form action={createAppointment}>
             <input type="hidden" name="slot_id" value={slotId} />
 
-            <div className="mb-4">
-              <label htmlFor="employee_name" className="block text-sm font-medium text-gray-700">
-                社員名 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="employee_name"
-                name="employee_name"
-                required
-                placeholder="山田 太郎"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="employee_id" className="block text-sm font-medium text-gray-700">
-                社員ID（社員番号） <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="employee_id"
-                name="employee_id"
-                required
-                placeholder="EMP-12345"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                ※ 同姓同名の社員を区別するために必要です
+            {/* 予約者情報の表示（編集不可） */}
+            <div className="mb-6 rounded-md bg-gray-50 p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">予約者情報</h3>
+              <p className="text-sm text-gray-600">
+                お名前: {userProfile?.full_name || '読み込み中...'}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                ※ 予約は本人のアカウントで行われます
               </p>
             </div>
 
@@ -183,12 +163,12 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
               />
             </div>
 
-            <div className="mb-6 rounded-md bg-yellow-50 p-4">
-              <h3 className="text-sm font-semibold text-yellow-900">ご確認ください</h3>
-              <ul className="mt-2 space-y-1 text-sm text-yellow-800">
-                <li>• 申込後、整体師の承認をお待ちください</li>
-                <li>• キャンセルは前日20時まで可能です</li>
-                <li>• 承認されるまで、この時間枠はロックされます</li>
+            <div className="mb-6 rounded-md bg-blue-50 p-4">
+              <h3 className="text-sm font-semibold text-blue-900">ご確認ください</h3>
+              <ul className="mt-2 space-y-1 text-sm text-blue-800">
+                <li>• 申込と同時に予約が確定します</li>
+                <li>• キャンセルはいつでも可能です</li>
+                <li>• 予約確定後、整体師に通知が届きます</li>
               </ul>
             </div>
 

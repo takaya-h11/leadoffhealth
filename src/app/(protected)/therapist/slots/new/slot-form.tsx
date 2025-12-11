@@ -12,12 +12,18 @@ type ServiceMenu = {
   price: number
 }
 
+type Company = {
+  id: string
+  name: string
+}
+
 type SlotFormProps = {
   therapistId: string
   serviceMenus: ServiceMenu[]
+  companies: Company[]
 }
 
-export default function SlotForm({ therapistId, serviceMenus }: SlotFormProps) {
+export default function SlotForm({ therapistId, serviceMenus, companies }: SlotFormProps) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -25,6 +31,7 @@ export default function SlotForm({ therapistId, serviceMenus }: SlotFormProps) {
 
   // フォームの値を管理
   const [selectedMenuId, setSelectedMenuId] = useState('')
+  const [selectedCompanyId, setSelectedCompanyId] = useState('')
   const [startHour, setStartHour] = useState('')
   const [startMinute, setStartMinute] = useState('')
   const [endHour, setEndHour] = useState('')
@@ -143,6 +150,30 @@ export default function SlotForm({ therapistId, serviceMenus }: SlotFormProps) {
           name="therapist_id"
           value={therapistId}
         />
+
+        <div className="mb-4">
+          <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">
+            対象法人
+          </label>
+          <select
+            id="company_id"
+            name="company_id"
+            disabled={isSubmitting}
+            value={selectedCompanyId}
+            onChange={(e) => setSelectedCompanyId(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100"
+          >
+            <option value="">全法人公開（誰でも予約可能）</option>
+            {companies?.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name} 専用
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            特定の法人専用にする場合は法人を選択してください。未選択の場合は全法人が予約可能です。
+          </p>
+        </div>
 
         <div className="mb-4">
           <label htmlFor="service_menu_id" className="block text-sm font-medium text-gray-700">
