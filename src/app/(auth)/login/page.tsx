@@ -136,6 +136,36 @@ export default async function LoginPage({
                 </div>
               </button>
             </form>
+
+            <form action={demoLogin}>
+              <input type="hidden" name="role" value="employee" />
+              <button
+                type="submit"
+                className="w-full rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700 hover:bg-orange-100"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>整体利用者としてログイン（次郎さん）</span>
+                </div>
+              </button>
+            </form>
+
+            <form action={demoLogin}>
+              <input type="hidden" name="role" value="employee2" />
+              <button
+                type="submit"
+                className="w-full rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 hover:bg-amber-100"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>整体利用者としてログイン（三郎さん）</span>
+                </div>
+              </button>
+            </form>
           </div>
           <p className="mt-2 text-center text-xs text-gray-400">
             ※ 開発環境専用機能です

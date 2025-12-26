@@ -12,7 +12,7 @@ export async function createAppointment(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // 権限チェック（法人担当者または管理者）
+  // 権限チェック（整体利用者、法人担当者、または管理者）
   const { data: userProfile } = await supabase
     .from('users')
     .select('role, company_id')
@@ -28,8 +28,8 @@ export async function createAppointment(formData: FormData) {
   if (userProfile?.role === 'admin' && isAdminBooking && specifiedCompanyId) {
     // 管理者が法人を指定して予約
     companyId = specifiedCompanyId
-  } else if (userProfile?.role === 'company_user' && userProfile.company_id) {
-    // 法人担当者が自社の予約
+  } else if ((userProfile?.role === 'company_user' || userProfile?.role === 'employee') && userProfile.company_id) {
+    // 法人担当者または整体利用者が自社の予約
     companyId = userProfile.company_id
   } else {
     redirect('/dashboard')
@@ -52,7 +52,7 @@ export async function createAppointment(formData: FormData) {
   // 空き枠の存在確認とステータスチェック
   const { data: slot, error: slotError } = await supabase
     .from('available_slots')
-    .select('status, start_time')
+    .select('status, start_time, company_id')
     .eq('id', slotId)
     .single()
 
@@ -66,31 +66,11 @@ export async function createAppointment(formData: FormData) {
     redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
   }
 
-  // 最短予約期間のチェック（3日前まで）- 削除予定だが一旦残す
-  const startTime = new Date(slot.start_time)
-  const threeDaysLater = new Date()
-  threeDaysLater.setDate(threeDaysLater.getDate() + 3)
-
-  if (startTime < threeDaysLater) {
-    redirect(`${redirectBasePath}/new?slot=${slotId}&message=${encodeURIComponent('予約は3日前までに行ってください')}`)
-  }
-
   try {
-    // 既存の予約をチェック（重複防止）
-    const { data: existingAppointment } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('slot_id', slotId)
-      .maybeSingle()
-
-    if (existingAppointment) {
-      console.log('Appointment already exists for slot:', slotId)
-      redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
-    }
-
     // トランザクション: 空き枠のステータス更新と予約作成
+    // 注: 重複チェックは楽観的ロックで実施（.eq('status', 'available')）
     // 1. 空き枠をbookedに更新（即時確定）
-    const { error: updateError } = await supabase
+    const { data: updatedSlot, error: updateError } = await supabase
       .from('available_slots')
       .update({
         status: 'booked',
@@ -98,9 +78,17 @@ export async function createAppointment(formData: FormData) {
       })
       .eq('id', slotId)
       .eq('status', 'available') // 楽観的ロック: availableの場合のみ更新
+      .select()
+      .maybeSingle()
 
     if (updateError) {
       console.error('Slot update error:', updateError)
+      redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
+    }
+
+    // 更新されたデータが返ってこない = 既に他の誰かが予約済み
+    if (!updatedSlot) {
+      console.log('Slot already booked by another user:', slotId)
       redirect(`${scheduleBasePath}?message=${encodeURIComponent('この枠は既に予約されています')}`)
     }
 
@@ -236,14 +224,14 @@ export async function cancelAppointment(appointmentId: string, slotId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // 法人担当者または管理者権限チェック
+  // 法人担当者、整体師、または管理者権限チェック
   const { data: userProfile } = await supabase
     .from('users')
     .select('role, company_id')
     .eq('id', user.id)
     .single()
 
-  if (!userProfile || (userProfile.role !== 'company_user' && userProfile.role !== 'admin')) {
+  if (!userProfile || (userProfile.role !== 'company_user' && userProfile.role !== 'admin' && userProfile.role !== 'therapist')) {
     redirect('/dashboard')
   }
 

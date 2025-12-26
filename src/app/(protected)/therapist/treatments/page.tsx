@@ -286,7 +286,6 @@ export default async function TherapistTreatmentHistoryPage({ searchParams }: Pa
                     </h3>
                     <div className="mb-4 space-y-1 text-sm text-gray-600">
                       <div>整体師: {therapistUser?.full_name || '不明'}</div>
-                      <div>社員ID: {appointment?.employee_id || '不明'}</div>
                       <div>
                         日時:{' '}
                         {startTime

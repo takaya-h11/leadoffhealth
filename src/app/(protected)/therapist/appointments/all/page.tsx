@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { StatusBadge } from '@/components/appointments/status-badge'
+import { CancelButton } from '@/app/(protected)/company/appointments/cancel-button'
 
 interface PageProps {
   searchParams: Promise<{
@@ -107,17 +108,17 @@ export default async function TherapistAllAppointmentsPage({ searchParams }: Pag
             href="/therapist/appointments"
             className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            承認待ち予約のみ表示
+            予約済みを確認
           </Link>
         </div>
 
         {message && (
           <div
             className={`mb-4 rounded-md p-4 ${
-              message.includes('success') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              message.includes('success') || message.includes('成功') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
             }`}
           >
-            <p className="text-sm">{message.replace('success: ', '')}</p>
+            <p className="text-sm">{message.replace('success: ', '').replace('成功: ', '')}</p>
           </div>
         )}
 
@@ -233,30 +234,50 @@ export default async function TherapistAllAppointmentsPage({ searchParams }: Pag
                           <StatusBadge status={appointment.status} />
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm">
-                          {appointment.status === 'approved' && (
-                            <Link
-                              href={`/therapist/appointments/${appointment.id}/report`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              施術レポート記入
-                            </Link>
-                          )}
-                          {appointment.status === 'pending' && (
-                            <Link
-                              href="/therapist/appointments"
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              承認/拒否
-                            </Link>
-                          )}
-                          {appointment.status === 'completed' && (
-                            <Link
-                              href={`/therapist/appointments/${appointment.id}/view`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              詳細を見る
-                            </Link>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {appointment.status === 'approved' && (
+                              <>
+                                <Link
+                                  href={`/therapist/appointments/${appointment.id}/report`}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  施術レポート記入
+                                </Link>
+                                <CancelButton
+                                  appointmentId={appointment.id}
+                                  slotId={appointment.slot_id}
+                                  startTime={slot.start_time}
+                                  status={appointment.status}
+                                  variant="small"
+                                />
+                              </>
+                            )}
+                            {appointment.status === 'pending' && (
+                              <>
+                                <Link
+                                  href="/therapist/appointments"
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  承認/拒否
+                                </Link>
+                                <CancelButton
+                                  appointmentId={appointment.id}
+                                  slotId={appointment.slot_id}
+                                  startTime={slot.start_time}
+                                  status={appointment.status}
+                                  variant="small"
+                                />
+                              </>
+                            )}
+                            {appointment.status === 'completed' && (
+                              <Link
+                                href={`/therapist/appointments/${appointment.id}/view`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                詳細を見る
+                              </Link>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )

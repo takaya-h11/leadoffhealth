@@ -13,10 +13,13 @@ interface CalendarEvent {
   end: Date
   resource: {
     therapistName: string
-    status: 'available' | 'pending' | 'booked' | 'cancelled'
+    status: 'available' | 'my_booking' | 'company_booking' | 'other_booking'
     serviceMenuName: string
     companyName?: string
     employeeName?: string
+    appointmentUserId?: string
+    appointmentId?: string
+    slotId?: string
   }
 }
 
@@ -26,12 +29,20 @@ interface ServiceMenu {
   duration_minutes: number
 }
 
+interface Company {
+  id: string
+  name: string
+}
+
 interface ScheduleClientProps {
   events: CalendarEvent[]
   serviceMenus: ServiceMenu[]
+  companies: Company[]
+  currentUserId: string
+  currentUserRole: string
 }
 
-export function ScheduleClient({ events, serviceMenus }: ScheduleClientProps) {
+export function ScheduleClient({ events, serviceMenus, companies, currentUserId, currentUserRole }: ScheduleClientProps) {
   const router = useRouter()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -50,6 +61,7 @@ export function ScheduleClient({ events, serviceMenus }: ScheduleClientProps) {
 
   const handleAddSlot = async (data: {
     service_menu_id: string
+    company_id?: string
     start_time: string
     end_time: string
   }) => {
@@ -109,6 +121,12 @@ export function ScheduleClient({ events, serviceMenus }: ScheduleClientProps) {
     router.refresh()
   }
 
+  const handleCancelAppointment = async (appointmentId: string, slotId: string) => {
+    const { cancelAppointment } = await import('@/app/(protected)/company/appointments/actions')
+    await cancelAppointment(appointmentId, slotId)
+    router.refresh()
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
@@ -142,6 +160,7 @@ export function ScheduleClient({ events, serviceMenus }: ScheduleClientProps) {
           initialStartTime={selectedSlot?.start}
           initialEndTime={selectedSlot?.end}
           serviceMenus={serviceMenus}
+          companies={companies}
           onClose={() => {
             setIsAddDialogOpen(false)
             setSelectedSlot(null)
@@ -153,12 +172,15 @@ export function ScheduleClient({ events, serviceMenus }: ScheduleClientProps) {
           isOpen={isEditDialogOpen}
           event={selectedEvent}
           serviceMenus={serviceMenus}
+          currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
           onClose={() => {
             setIsEditDialogOpen(false)
             setSelectedEvent(null)
           }}
           onUpdate={handleUpdateSlot}
           onDelete={handleDeleteSlot}
+          onCancelAppointment={handleCancelAppointment}
         />
       </div>
     </div>

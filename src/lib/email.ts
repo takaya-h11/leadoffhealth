@@ -82,7 +82,6 @@ export async function sendAppointmentRequestEmail(
       })} 〜 ${endTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</li>
                 <li><span class="label">法人:</span> ${appointment.companyName}</li>
                 <li><span class="label">社員名:</span> ${appointment.employeeName}</li>
-                <li><span class="label">社員ID:</span> ${appointment.employeeId}</li>
                 <li><span class="label">症状:</span> ${appointment.symptoms.length > 0 ? appointment.symptoms.join(', ') : '-'}</li>
                 ${appointment.notes ? `<li><span class="label">要望:</span> ${appointment.notes}</li>` : ''}
               </ul>
@@ -165,7 +164,6 @@ export async function sendAppointmentApprovedEmail(
       })} 〜 ${endTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</li>
                 <li><span class="label">担当整体師:</span> ${appointment.therapistName || '不明'}</li>
                 <li><span class="label">社員名:</span> ${appointment.employeeName}</li>
-                <li><span class="label">社員ID:</span> ${appointment.employeeId}</li>
               </ul>
             </div>
 
@@ -237,7 +235,6 @@ export async function sendAppointmentRejectedEmail(
                   weekday: 'short',
                 })} ${startTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</li>
                 <li><span class="label">社員名:</span> ${appointment.employeeName}</li>
-                <li><span class="label">社員ID:</span> ${appointment.employeeId}</li>
               </ul>
 
               <h3 style="margin-top: 20px;">拒否理由</h3>
@@ -413,7 +410,6 @@ export async function sendReminderEmail(
                     ? `
                   <li><span class="label">法人:</span> ${appointment.companies?.name || '不明'}</li>
                   <li><span class="label">社員名:</span> ${appointment.employee_name}</li>
-                  <li><span class="label">社員ID:</span> ${appointment.employee_id}</li>
                 `
                     : `
                   <li><span class="label">社員名:</span> ${appointment.employee_name}</li>

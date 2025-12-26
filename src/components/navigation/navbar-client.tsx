@@ -19,7 +19,7 @@ export function NavbarClient({ user, userProfile }: NavbarClientProps) {
   const { isModern } = useTheme();
 
   return (
-    <nav className={`border-b transition-all duration-300 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
       isModern
         ? 'bg-gradient-to-r from-white via-blue-50/30 to-purple-50/30 backdrop-blur-xl border-white/50 shadow-lg'
         : 'bg-white border-gray-200'

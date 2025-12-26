@@ -13,15 +13,16 @@ interface AppointmentData {
   symptoms?: string[];
   available_slots: {
     start_time: string;
+    end_time: string;
     service_menus: { name: string };
   };
   companies: { name: string };
+  users?: { full_name: string; id: string };
 }
 
 interface TherapistDashboardProps {
   userName: string;
   todayCount: number;
-  pendingCount: number;
   weekCount: number;
   monthCompletedCount: number;
   todayAppointments: AppointmentData[];
@@ -31,7 +32,6 @@ interface TherapistDashboardProps {
 export function TherapistDashboard({
   userName,
   todayCount,
-  pendingCount,
   weekCount,
   monthCompletedCount,
   todayAppointments,
@@ -46,14 +46,7 @@ export function TherapistDashboard({
       icon: '📅',
       gradient: 'blue',
       bgGradient: isModern ? 'from-blue-100 to-cyan-100' : 'bg-blue-100',
-    },
-    {
-      label: '承認待ち',
-      value: pendingCount,
-      icon: '⏳',
-      gradient: 'orange',
-      bgGradient: isModern ? 'from-yellow-100 to-orange-100' : 'bg-yellow-100',
-      valueColor: 'text-yellow-600',
+      valueColor: 'text-gray-900',
     },
     {
       label: '今週の予約',
@@ -61,6 +54,7 @@ export function TherapistDashboard({
       icon: '✅',
       gradient: 'green',
       bgGradient: isModern ? 'from-green-100 to-teal-100' : 'bg-green-100',
+      valueColor: 'text-gray-900',
     },
     {
       label: '今月の施術完了',
@@ -68,6 +62,7 @@ export function TherapistDashboard({
       icon: '📋',
       gradient: 'purple',
       bgGradient: isModern ? 'from-purple-100 to-pink-100' : 'bg-purple-100',
+      valueColor: 'text-gray-900',
     },
   ];
 
@@ -87,9 +82,9 @@ export function TherapistDashboard({
         </div>
 
         {/* 統計カード */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           {stats.map((stat, index) => (
-            <ModernCard key={index} gradient={isModern ? stat.gradient as 'blue' | 'orange' | 'green' | 'purple' : undefined} hover>
+            <ModernCard key={index} gradient={isModern ? stat.gradient as 'blue' | 'green' | 'purple' : undefined} hover>
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -108,35 +103,6 @@ export function TherapistDashboard({
             </ModernCard>
           ))}
         </div>
-
-        {/* 承認待ちの予約警告 */}
-        {pendingCount > 0 && (
-          <ModernCard gradient={isModern ? 'orange' : undefined} className="mb-8">
-            <div className={isModern ? 'p-8' : 'p-6 border-2 border-orange-200 bg-orange-50'}>
-              <div className="mb-6 flex items-center gap-3">
-                <span className="text-2xl">🔔</span>
-                <h2 className={isModern ? 'text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent' : 'text-xl font-semibold text-orange-900'}>
-                  承認待ちの予約があります
-                </h2>
-                <span className={`ml-auto rounded-full px-4 py-1.5 text-sm font-bold ${
-                  isModern
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                    : 'bg-orange-200 text-orange-900'
-                }`}>
-                  {pendingCount}件
-                </span>
-              </div>
-              <p className={isModern ? 'text-gray-700 font-medium mb-4' : 'text-gray-700 mb-4'}>
-                法人から予約申込が届いています。予約管理画面から確認・承認してください。
-              </p>
-              <Link href="/therapist/appointments?status=pending">
-                <ModernButton variant="warning" size="md">
-                  📋 予約承認画面へ
-                </ModernButton>
-              </Link>
-            </div>
-          </ModernCard>
-        )}
 
         {/* レポート記入待ち */}
         {needReportAppointments && needReportAppointments.length > 0 && (
@@ -185,7 +151,7 @@ export function TherapistDashboard({
                           </p>
                         </div>
                         <p className={isModern ? 'mt-1 text-sm text-gray-600 font-medium' : 'mt-1 text-sm text-gray-600'}>
-                          {appointment.employee_name}（{appointment.employee_id}）
+                          {Array.isArray(appointment.users) ? appointment.users[0]?.full_name : appointment.users?.full_name || appointment.employee_name || '不明'}
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
                           {startTime.toLocaleDateString('ja-JP')} {startTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
@@ -261,7 +227,7 @@ export function TherapistDashboard({
                               {company?.name || '不明'}
                             </p>
                             <p className={isModern ? 'mt-1 text-sm text-gray-600 font-medium' : 'mt-1 text-sm text-gray-600'}>
-                              {appointment.employee_name}（{appointment.employee_id}）
+                              {Array.isArray(appointment.users) ? appointment.users[0]?.full_name : appointment.users?.full_name || appointment.employee_name || '不明'}
                             </p>
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                               {appointment.symptoms && appointment.symptoms.length > 0 && appointment.symptoms.map((symptom: string, idx: number) => (

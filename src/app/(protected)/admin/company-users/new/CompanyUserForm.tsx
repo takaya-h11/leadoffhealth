@@ -43,6 +43,26 @@ export default function CompanyUserForm({ companies }: { companies: Company[] })
         <h2 className="mb-4 text-lg font-semibold text-gray-900">基本情報</h2>
 
         <div className="mb-4">
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+            役割 <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="role"
+            name="role"
+            required
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          >
+            <option value="">選択してください</option>
+            <option value="company_user">法人担当者（予約を申し込む人）</option>
+            <option value="employee">整体利用者（実際に施術を受ける人）</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            • 法人担当者: 空き枠を閲覧し、予約を申し込むことができます<br />
+            • 整体利用者: 予約を閲覧し、自分の予約をキャンセルできます
+          </p>
+        </div>
+
+        <div className="mb-4">
           <label htmlFor="company_id" className="block text-sm font-medium text-gray-700">
             所属法人 <span className="text-red-500">*</span>
           </label>

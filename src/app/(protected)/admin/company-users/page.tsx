@@ -44,7 +44,7 @@ export default async function CompanyUsersPage({
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">法人担当者管理</h1>
+          <h1 className="text-3xl font-bold text-gray-900">法人担当者・整体利用者管理</h1>
           <Link
             href="/admin/company-users/new"
             className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"

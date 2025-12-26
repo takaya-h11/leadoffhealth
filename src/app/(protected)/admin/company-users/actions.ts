@@ -38,15 +38,24 @@ export async function createCompanyUser(formData: FormData): Promise<ActionResul
   const full_name = formData.get('full_name') as string
   const phone = formData.get('phone') as string || null
   const company_id = formData.get('company_id') as string
+  const role = formData.get('role') as string
 
   // 初期パスワード生成（セキュアな12文字）
   const password = generateSecurePassword(12)
 
   // バリデーション
-  if (!email || !full_name || !company_id) {
+  if (!email || !full_name || !company_id || !role) {
     return {
       success: false,
-      error: 'メールアドレス、氏名、所属法人は必須です'
+      error: 'メールアドレス、氏名、所属法人、役割は必須です'
+    }
+  }
+
+  // ロールのバリデーション
+  if (role !== 'company_user' && role !== 'employee') {
+    return {
+      success: false,
+      error: '無効な役割が選択されました'
     }
   }
 
@@ -75,7 +84,7 @@ export async function createCompanyUser(formData: FormData): Promise<ActionResul
       email_confirm: true, // メール認証をスキップ
       user_metadata: {
         full_name,
-        role: 'company_user',
+        role, // フォームから取得したロール（company_user または employee）
         must_change_password: !isDemo, // デモユーザーはパスワード変更不要
       },
     })

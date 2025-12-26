@@ -18,14 +18,14 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // 法人担当者権限チェック
+  // 法人担当者または整体利用者の権限チェック
   const { data: userProfile } = await supabase
     .from('users')
     .select('role, company_id, full_name')
     .eq('id', user.id)
     .single()
 
-  if (userProfile?.role !== 'company_user') {
+  if (userProfile?.role !== 'company_user' && userProfile?.role !== 'employee') {
     redirect('/dashboard')
   }
 
@@ -36,8 +36,31 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
     redirect('/company/schedule?message=' + encodeURIComponent('時間枠を選択してください'))
   }
 
-  // 空き枠情報を取得
+  // 空き枠情報を取得（カレンダービューを使用して予約可能かチェック）
   const { data: slot } = await supabase
+    .from('calendar_slots_for_users')
+    .select('*')
+    .eq('slot_id', slotId)
+    .single()
+
+  // カレンダーと同じロジックで予約可能かチェック
+  let isBookable = false
+  if (slot) {
+    if (slot.appointment_id) {
+      // 予約がある場合、キャンセル済みなら予約可能
+      isBookable = slot.appointment_status === 'cancelled'
+    } else {
+      // 予約がない場合、スロット自体がcancelledでなければ予約可能
+      isBookable = slot.slot_status !== 'cancelled'
+    }
+  }
+
+  if (!slot || !isBookable) {
+    redirect('/company/schedule?message=' + encodeURIComponent('この時間枠は予約できません'))
+  }
+
+  // therapists, service_menus の詳細情報を取得（ビューには含まれていないため）
+  const { data: slotDetails } = await supabase
     .from('available_slots')
     .select(`
       *,
@@ -53,12 +76,7 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
       )
     `)
     .eq('id', slotId)
-    .eq('status', 'available')
     .single()
-
-  if (!slot) {
-    redirect('/company/schedule?message=' + encodeURIComponent('この時間枠は予約できません'))
-  }
 
   // 症状マスター一覧を取得
   const { data: symptoms } = await supabase
@@ -67,9 +85,9 @@ export default async function NewAppointmentPage({ searchParams }: PageProps) {
     .eq('is_active', true)
     .order('display_order')
 
-  const therapist = Array.isArray(slot.therapists) ? slot.therapists[0] : slot.therapists
+  const therapist = Array.isArray(slotDetails?.therapists) ? slotDetails.therapists[0] : slotDetails?.therapists
   const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
-  const serviceMenu = Array.isArray(slot.service_menus) ? slot.service_menus[0] : slot.service_menus
+  const serviceMenu = Array.isArray(slotDetails?.service_menus) ? slotDetails.service_menus[0] : slotDetails?.service_menus
 
   const startTime = new Date(slot.start_time)
   const endTime = new Date(slot.end_time)

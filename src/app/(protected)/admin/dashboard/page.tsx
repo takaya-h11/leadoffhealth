@@ -48,12 +48,6 @@ export default async function AdminDashboardPage() {
     .in('status', ['approved', 'completed'])
     .order('available_slots(start_time)')
 
-  // 承認待ち件数
-  const { count: pendingCount } = await supabase
-    .from('appointments')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending')
-
   // 今週の予約数
   const weekStart = new Date(today)
   weekStart.setDate(today.getDate() - today.getDay())
@@ -88,7 +82,6 @@ export default async function AdminDashboardPage() {
     <AdminDashboard
       userName={userProfile?.full_name || user.email}
       todayCount={todayAppointments?.length || 0}
-      pendingCount={pendingCount || 0}
       weekCount={weekAppointments || 0}
       monthCompletedCount={monthCompletedCount || 0}
       activeCompanies={activeCompanies || 0}

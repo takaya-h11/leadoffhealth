@@ -67,6 +67,7 @@ export const messageTranslations: Record<string, string> = {
   'Treatment record creation failed': '施術レポートの記録に失敗しました',
   'No permission to fill report': 'この予約の施術レポートを記入する権限がありません',
   'success: Treatment report submitted': '施術レポートを記録しました',
+  '成功: 施術レポートを記録しました': '成功: 施術レポートを記録しました',
 }
 
 /**

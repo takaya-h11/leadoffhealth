@@ -58,7 +58,7 @@ export default async function CompanyUserSuccessPage({
               />
             </svg>
             <h1 className="text-xl font-bold text-green-900">
-              法人担当者を登録しました
+              法人ユーザーを登録しました
             </h1>
           </div>
         </div>
@@ -81,10 +81,10 @@ export default async function CompanyUserSuccessPage({
             </svg>
             <div>
               <h2 className="text-lg font-semibold text-yellow-900 mb-2">
-                以下の情報を法人担当者にお伝えください
+                以下の情報を登録したユーザーにお伝えください
               </h2>
               <p className="text-sm text-yellow-800">
-                初期パスワードは一度しか表示されません。必ず法人担当者に連絡してください。
+                初期パスワードは一度しか表示されません。必ずユーザーに連絡してください。
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default async function CompanyUserSuccessPage({
         {/* 連絡事項カード */}
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-6 mb-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-3">
-            法人担当者へ伝える内容
+            ユーザーへ伝える内容
           </h2>
           <div className="text-sm text-blue-800 space-y-2">
             <p>1. ログインURL: <span className="font-mono bg-white px-2 py-1 rounded">{typeof window !== 'undefined' ? window.location.origin : 'https://your-app-url.com'}/login</span></p>
@@ -155,7 +155,7 @@ export default async function CompanyUserSuccessPage({
             href="/admin/company-users"
             className="flex-1 rounded-md bg-gray-600 px-6 py-3 text-center text-white hover:bg-gray-700 font-medium"
           >
-            法人担当者一覧に戻る
+            法人ユーザー一覧に戻る
           </Link>
           <Link
             href="/admin/company-users/new"
@@ -174,7 +174,7 @@ export default async function CompanyUserSuccessPage({
             <li>このページを離れると初期パスワードは二度と表示されません</li>
             <li>パスワードは安全な方法（電話、対面など）で伝えてください</li>
             <li>メールやチャットでの送信は避けてください</li>
-            <li>法人担当者に連絡が完了したことを確認してからページを閉じてください</li>
+            <li>ユーザーに連絡が完了したことを確認してからページを閉じてください</li>
             <li>万が一パスワードを忘れた場合は、管理者が「パスワード再発行」を実行できます</li>
           </ul>
         </div>

@@ -52,20 +52,17 @@ export default async function TherapistDashboardPage() {
       ),
       companies (
         name
+      ),
+      users!appointments_user_id_fkey (
+        full_name,
+        id
       )
     `)
     .eq('available_slots.therapist_id', therapistData.id)
     .gte('available_slots.start_time', today.toISOString())
     .lt('available_slots.start_time', tomorrow.toISOString())
-    .in('status', ['pending', 'approved'])
+    .in('status', ['approved', 'completed'])
     .order('available_slots(start_time)')
-
-  // 承認待ち件数（自分宛）
-  const { count: pendingCount } = await supabase
-    .from('appointments')
-    .select('*, available_slots!inner(therapists!inner(id))', { count: 'exact', head: true })
-    .eq('available_slots.therapists.id', therapistData.id)
-    .eq('status', 'pending')
 
   // 今週の予約数（自分）
   const weekStart = new Date(today)
@@ -106,6 +103,10 @@ export default async function TherapistDashboardPage() {
       ),
       companies (
         name
+      ),
+      users!appointments_user_id_fkey (
+        full_name,
+        id
       )
     `)
     .eq('available_slots.therapist_id', therapistData.id)
@@ -118,7 +119,6 @@ export default async function TherapistDashboardPage() {
     <TherapistDashboard
       userName={userProfile?.full_name || user.email}
       todayCount={todayAppointments?.length || 0}
-      pendingCount={pendingCount || 0}
       weekCount={weekAppointments || 0}
       monthCompletedCount={monthCompletedCount || 0}
       todayAppointments={todayAppointments || []}

@@ -13,7 +13,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   const labels: Record<string, string> = {
     pending: '承認待ち',
-    approved: '承認済み',
+    approved: '予約済み',
     rejected: '拒否',
     cancelled: 'キャンセル',
     completed: '完了',

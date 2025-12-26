@@ -59,12 +59,14 @@ export async function signup(formData: FormData) {
 export async function demoLogin(formData: FormData) {
   const supabase = await createClient()
 
-  const role = formData.get('role') as 'admin' | 'therapist' | 'company_user'
+  const role = formData.get('role') as 'admin' | 'therapist' | 'company_user' | 'employee' | 'employee2'
 
   const demoUsers = {
     admin: { email: 'admin@demo.com', password: 'demo123' },
     therapist: { email: 'therapist@demo.com', password: 'demo123' },
     company_user: { email: 'company@demo.com', password: 'demo123' },
+    employee: { email: 'employee@demo.com', password: 'demo123' },
+    employee2: { email: 'employee2@demo.com', password: 'demo123' },
   }
 
   const credentials = demoUsers[role]
@@ -76,17 +78,41 @@ export async function demoLogin(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(credentials)
 
   if (error) {
-    redirect('/login?message=Demo+login+failed')
+    console.error('Demo login error:', {
+      role,
+      email: credentials.email,
+      errorCode: error.code,
+      errorMessage: error.message,
+      errorStatus: error.status
+    })
+    redirect(`/login?message=Demo+login+failed:+${encodeURIComponent(error.message)}`)
   }
 
   // must_change_password チェック
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
-    const { data: userProfile } = await supabase
+    console.log('[DEBUG] Fetching user profile for:', user.id, 'role:', role)
+
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('must_change_password')
       .eq('id', user.id)
       .single()
+
+    if (profileError) {
+      console.error('[ERROR] Failed to fetch user profile:', {
+        userId: user.id,
+        role,
+        error: profileError,
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint
+      })
+      redirect(`/login?message=Profile+check+failed:+${encodeURIComponent(profileError.message)}`)
+    }
+
+    console.log('[DEBUG] User profile fetched successfully:', userProfile)
 
     if (userProfile?.must_change_password) {
       revalidatePath('/', 'layout')

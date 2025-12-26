@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 // import { ApprovalButtons } from './approval-buttons' // 承認機能廃止のためコメントアウト
 import { translateMessage } from '@/utils/messages'
+import { ScrollToTop } from '@/components/ScrollToTop'
 
 export default async function TherapistAppointmentsPage({
   searchParams,
@@ -90,6 +91,7 @@ export default async function TherapistAppointmentsPage({
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      <ScrollToTop />
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -108,7 +110,7 @@ export default async function TherapistAppointmentsPage({
 
         {message && (
           <div className={`mb-4 rounded-md p-4 ${
-            message.includes('successfully')
+            message.includes('successfully') || message.includes('成功')
               ? 'bg-green-50 text-green-800'
               : 'bg-red-50 text-red-800'
           }`}>
@@ -129,7 +131,7 @@ export default async function TherapistAppointmentsPage({
             const bgColor = 'bg-blue-50'
             const badgeBgColor = 'bg-blue-100'
             const badgeTextColor = 'text-blue-800'
-            const statusText = '予約確定'
+            const statusText = '予約済み'
 
             return (
               <div

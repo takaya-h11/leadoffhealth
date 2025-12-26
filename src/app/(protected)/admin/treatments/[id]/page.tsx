@@ -76,7 +76,7 @@ export default async function TreatmentDetailPage({ params }: PageProps) {
     ? treatment.appointments[0]
     : treatment.appointments
 
-  if (userProfile.role === 'company_user') {
+  if (userProfile.role === 'company_user' || userProfile.role === 'employee') {
     if (appointment?.company_id !== userProfile.company_id) {
       redirect('/dashboard?message=' + encodeURIComponent('この施術履歴を閲覧する権限がありません'))
     }
@@ -139,10 +139,6 @@ export default async function TreatmentDetailPage({ params }: PageProps) {
             <div>
               <dt className="text-sm font-medium text-gray-500">社員名</dt>
               <dd className="mt-1 text-base text-gray-900">{appointment?.employee_name || '不明'}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">社員ID</dt>
-              <dd className="mt-1 text-base text-gray-900">{appointment?.employee_id || '不明'}</dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">整体師</dt>

@@ -42,9 +42,12 @@ export default async function NewCompanyUserPage({
             href="/admin/company-users"
             className="text-sm text-blue-600 hover:text-blue-900"
           >
-            ← 法人担当者一覧に戻る
+            ← 法人ユーザー一覧に戻る
           </Link>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">新規法人担当者登録</h1>
+          <h1 className="mt-4 text-3xl font-bold text-gray-900">新規法人ユーザー登録</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            法人担当者（予約を申し込む人）または整体利用者（実際に施術を受ける人）を登録します。
+          </p>
         </div>
 
         {message && (

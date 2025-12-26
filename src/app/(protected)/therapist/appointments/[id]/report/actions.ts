@@ -238,7 +238,7 @@ export async function createTreatmentRecord(formData: FormData) {
     redirect('/therapist/appointments?message=Appointment+not+found')
   }
 
-  if (appointment.status !== 'approved') {
+  if (appointment.status !== 'approved' && appointment.status !== 'completed') {
     redirect('/therapist/appointments?message=Appointment+not+ready+for+report')
   }
 
@@ -367,7 +367,7 @@ export async function createTreatmentRecord(formData: FormData) {
     revalidatePath('/therapist/appointments')
     revalidatePath('/company/appointments')
     revalidatePath('/admin/appointments')
-    redirect('/therapist/appointments?message=' + encodeURIComponent('success: 施術レポートを記録しました'))
+    redirect('/therapist/appointments?message=' + encodeURIComponent('成功: 施術レポートを記録しました'))
   } catch (error) {
     // redirect()は内部的に例外をスローするので、それを再スロー
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {

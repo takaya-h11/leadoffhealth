@@ -28,7 +28,12 @@
       "Bash(node scripts/cleanup-orphaned-users.mjs:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(rm:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
@@ -37,6 +42,7 @@
   "enabledMcpjsonServers": [
     "supabase",
     "playwright",
-    "github"
+    "github",
+    "serena"
   ]
 }

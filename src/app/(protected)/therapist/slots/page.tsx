@@ -321,10 +321,6 @@ export default async function SlotsListPage({
                               <dt className="inline font-medium">社員名: </dt>
                               <dd className="inline">{appointment.employee_name}</dd>
                             </div>
-                            <div>
-                              <dt className="inline font-medium">社員ID: </dt>
-                              <dd className="inline">{appointment.employee_id}</dd>
-                            </div>
                           </dl>
                         </div>
                       )}

@@ -42,7 +42,7 @@ export default async function CompaniesPage({
               href="/admin/company-users"
               className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
             >
-              法人担当者管理
+              法人担当者・整体利用者管理
             </Link>
             <Link
               href="/admin/companies/new"

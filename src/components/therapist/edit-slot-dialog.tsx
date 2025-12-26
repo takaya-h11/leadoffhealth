@@ -14,13 +14,18 @@ interface EditSlotDialogProps {
     end: Date
     resource: {
       therapistName: string
-      status: 'available' | 'pending' | 'booked' | 'cancelled'
+      status: 'available' | 'my_booking' | 'company_booking' | 'other_booking'
       serviceMenuName: string
       companyName?: string
       employeeName?: string
+      appointmentUserId?: string
+      appointmentId?: string
+      slotId?: string
     }
   } | null
   serviceMenus: { id: string; name: string; duration_minutes: number }[]
+  currentUserId: string
+  currentUserRole: string
   onClose: () => void
   onUpdate: (
     id: string,
@@ -31,15 +36,19 @@ interface EditSlotDialogProps {
     }
   ) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  onCancelAppointment?: (appointmentId: string, slotId: string) => Promise<void>
 }
 
 export function EditSlotDialog({
   isOpen,
   event,
   serviceMenus,
+  currentUserId,
+  currentUserRole,
   onClose,
   onUpdate,
   onDelete,
+  onCancelAppointment,
 }: EditSlotDialogProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [selectedMenuId, setSelectedMenuId] = useState<string>('')
@@ -50,6 +59,7 @@ export function EditSlotDialog({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   // イベント情報を初期化
   useEffect(() => {
@@ -177,10 +187,39 @@ export function EditSlotDialog({
     }
   }
 
+  const handleCancelAppointment = async () => {
+    if (!event || !event.resource.appointmentId || !event.resource.slotId || !onCancelAppointment) return
+    setIsLoading(true)
+
+    try {
+      await onCancelAppointment(event.resource.appointmentId, event.resource.slotId)
+      setShowCancelConfirm(false)
+      handleClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'キャンセルに失敗しました')
+      setShowCancelConfirm(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   if (!isOpen || !event) return null
 
   const isAvailable = event.resource.status === 'available'
   const canEdit = isAvailable
+  const canCancel = (event.resource.status === 'my_booking' || event.resource.status === 'company_booking' || event.resource.status === 'other_booking') &&
+                     event.resource.appointmentId &&
+                     event.resource.slotId &&
+                     onCancelAppointment
+
+  // 社員名を表示できる条件：
+  // 1. 本人（appointmentUserId === currentUserId）
+  // 2. 整体師（currentUserRole === 'therapist'）
+  // 3. 管理者（currentUserRole === 'admin'）
+  const canViewEmployeeName =
+    currentUserRole === 'therapist' ||
+    currentUserRole === 'admin' ||
+    (event.resource.appointmentUserId && event.resource.appointmentUserId === currentUserId)
 
   return (
     <>
@@ -230,7 +269,7 @@ export function EditSlotDialog({
           )}
 
           {/* 予約済みの場合の警告 */}
-          {!canEdit && (
+          {!canEdit && !canCancel && (
             <div className="mb-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
               予約が入っているため、編集・削除できません
             </div>
@@ -335,7 +374,14 @@ export function EditSlotDialog({
               </div>
 
               {/* ボタン */}
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-start gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={isLoading}
+                >
+                  {isLoading ? '更新中...' : '更新'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
@@ -343,13 +389,6 @@ export function EditSlotDialog({
                   disabled={isLoading}
                 >
                   キャンセル
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  disabled={isLoading}
-                >
-                  {isLoading ? '更新中...' : '更新'}
                 </button>
               </div>
             </form>
@@ -379,15 +418,15 @@ export function EditSlotDialog({
                 <div className="inline-flex items-center gap-2">
                   <div className={`h-3 w-3 rounded-full ${
                     event.resource.status === 'available' ? 'bg-green-500' :
-                    event.resource.status === 'pending' ? 'bg-yellow-500' :
-                    event.resource.status === 'booked' ? 'bg-blue-500' :
+                    event.resource.status === 'my_booking' ? 'bg-blue-700' :
+                    event.resource.status === 'company_booking' ? 'bg-blue-400' :
                     'bg-gray-500'
                   }`} />
                   <span className="text-base text-gray-900">
                     {event.resource.status === 'available' ? '予約可能' :
-                     event.resource.status === 'pending' ? '承認待ち' :
-                     event.resource.status === 'booked' ? '予約確定' :
-                     'キャンセル'}
+                     event.resource.status === 'my_booking' ? '自分の予約' :
+                     event.resource.status === 'company_booking' ? '自社の予約' :
+                     '他社の予約'}
                   </span>
                 </div>
               </div>
@@ -399,7 +438,7 @@ export function EditSlotDialog({
                 </div>
               )}
 
-              {event.resource.employeeName && (
+              {canViewEmployeeName && event.resource.employeeName && (
                 <div>
                   <div className="text-sm font-medium text-gray-500 mb-1">社員名</div>
                   <div className="text-base text-gray-900">{event.resource.employeeName}</div>
@@ -427,12 +466,22 @@ export function EditSlotDialog({
                     </button>
                   </>
                 )}
+                {canCancel && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                    disabled={isLoading}
+                  >
+                    予約をキャンセル
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleClose}
                   className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                 >
-                  キャンセル
+                  閉じる
                 </button>
               </div>
             </div>
@@ -450,6 +499,18 @@ export function EditSlotDialog({
         confirmVariant="danger"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      {/* 予約キャンセル確認ダイアログ */}
+      <ConfirmationDialog
+        isOpen={showCancelConfirm}
+        title="予約をキャンセル"
+        message="この予約をキャンセルしてもよろしいですか？空き枠は再度予約可能な状態に戻ります。"
+        confirmLabel="キャンセル"
+        cancelLabel="戻る"
+        confirmVariant="danger"
+        onConfirm={handleCancelAppointment}
+        onCancel={() => setShowCancelConfirm(false)}
       />
     </>
   )

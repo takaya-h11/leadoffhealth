@@ -25,7 +25,6 @@ interface AppointmentWithDetails {
 interface AdminDashboardProps {
   userName: string;
   todayCount: number;
-  pendingCount: number;
   weekCount: number;
   monthCompletedCount: number;
   activeCompanies: number;
@@ -35,7 +34,6 @@ interface AdminDashboardProps {
 export function AdminDashboard({
   userName,
   todayCount,
-  pendingCount,
   weekCount,
   monthCompletedCount,
   activeCompanies: _activeCompanies,
@@ -51,15 +49,7 @@ export function AdminDashboard({
       gradient: 'blue',
       bgGradient: isModern ? 'from-blue-100 to-cyan-100' : 'bg-blue-100',
       iconColor: 'text-blue-600',
-    },
-    {
-      label: '承認待ち',
-      value: pendingCount,
-      icon: '⏳',
-      gradient: 'orange',
-      bgGradient: isModern ? 'from-yellow-100 to-orange-100' : 'bg-yellow-100',
-      valueColor: 'text-yellow-600',
-      iconColor: 'text-yellow-600',
+      valueColor: 'text-gray-900',
     },
     {
       label: '今週の予約',
@@ -68,6 +58,7 @@ export function AdminDashboard({
       gradient: 'green',
       bgGradient: isModern ? 'from-green-100 to-teal-100' : 'bg-green-100',
       iconColor: 'text-green-600',
+      valueColor: 'text-gray-900',
     },
     {
       label: '今月の施術完了',
@@ -76,6 +67,7 @@ export function AdminDashboard({
       gradient: 'purple',
       bgGradient: isModern ? 'from-purple-100 to-pink-100' : 'bg-purple-100',
       iconColor: 'text-purple-600',
+      valueColor: 'text-gray-900',
     },
   ];
 
@@ -101,8 +93,8 @@ export function AdminDashboard({
         },
         {
           href: '/admin/appointments',
-          title: '予約承認・管理',
-          description: '予約の承認・拒否・閲覧',
+          title: '予約管理',
+          description: '予約の閲覧・キャンセル',
           icon: '📋',
           gradient: 'from-blue-50/80 to-cyan-50/60',
           iconGradient: 'from-blue-500 to-cyan-500',
@@ -130,7 +122,7 @@ export function AdminDashboard({
         },
         {
           href: '/admin/company-users',
-          title: '法人担当者管理',
+          title: '法人担当者・整体利用者管理',
           description: 'ログインアカウントの管理',
           icon: '👤',
           gradient: 'from-blue-50/80 to-indigo-50/60',
@@ -183,6 +175,19 @@ export function AdminDashboard({
         },
       ],
     },
+    {
+      title: 'レポート',
+      links: [
+        {
+          href: '/admin/reports/company-treatment',
+          title: '法人別施術レポート',
+          description: '統計・詳細をPDF出力',
+          icon: '📊',
+          gradient: 'from-indigo-50/80 to-purple-50/60',
+          iconGradient: 'from-indigo-500 to-purple-500',
+        },
+      ],
+    },
   ];
 
   return (
@@ -199,9 +204,9 @@ export function AdminDashboard({
         </div>
 
         {/* 統計カード */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           {stats.map((stat, index) => (
-            <ModernCard key={index} gradient={isModern ? (stat.gradient as 'blue' | 'orange' | 'green' | 'purple') : undefined} hover>
+            <ModernCard key={index} gradient={isModern ? (stat.gradient as 'blue' | 'green' | 'purple') : undefined} hover>
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -220,35 +225,6 @@ export function AdminDashboard({
             </ModernCard>
           ))}
         </div>
-
-        {/* 承認待ちの予約警告 */}
-        {pendingCount > 0 && (
-          <ModernCard gradient={isModern ? 'orange' : undefined} className="mb-8">
-            <div className={isModern ? 'p-8' : 'p-6 border-2 border-orange-200 bg-orange-50'}>
-              <div className="mb-6 flex items-center gap-3">
-                <span className="text-2xl">🔔</span>
-                <h2 className={isModern ? 'text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent' : 'text-xl font-semibold text-orange-900'}>
-                  承認待ちの予約があります
-                </h2>
-                <span className={`ml-auto rounded-full px-4 py-1.5 text-sm font-bold ${
-                  isModern
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                    : 'bg-orange-200 text-orange-900'
-                }`}>
-                  {pendingCount}件
-                </span>
-              </div>
-              <p className={isModern ? 'text-gray-700 font-medium mb-4' : 'text-gray-700 mb-4'}>
-                法人から予約申込が届いています。予約管理画面から確認・承認してください。
-              </p>
-              <Link href="/admin/appointments?status=pending">
-                <ModernButton variant="warning" size="md">
-                  📋 予約承認画面へ
-                </ModernButton>
-              </Link>
-            </div>
-          </ModernCard>
-        )}
 
         {/* 今日の予約 */}
         <ModernCard gradient={isModern ? 'cyan' : undefined} className="mb-8">
@@ -311,7 +287,7 @@ export function AdminDashboard({
                             ? 'bg-gradient-to-r from-green-100 to-teal-100 text-green-700'
                             : 'bg-green-100 text-green-800'
                       }`}>
-                        {appointment.status === 'approved' ? '予約確定' : '施術完了'}
+                        {appointment.status === 'approved' ? '予約済み' : '施術完了'}
                       </span>
                     </div>
                   );

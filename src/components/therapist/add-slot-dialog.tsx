@@ -8,9 +8,11 @@ interface AddSlotDialogProps {
   initialStartTime?: Date
   initialEndTime?: Date
   serviceMenus: { id: string; name: string; duration_minutes: number }[]
+  companies: { id: string; name: string }[]
   onClose: () => void
   onSubmit: (data: {
     service_menu_id: string
+    company_id?: string
     start_time: string
     end_time: string
   }) => Promise<void>
@@ -21,10 +23,12 @@ export function AddSlotDialog({
   initialStartTime,
   initialEndTime,
   serviceMenus,
+  companies,
   onClose,
   onSubmit,
 }: AddSlotDialogProps) {
   const [selectedMenuId, setSelectedMenuId] = useState<string>('')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -93,6 +97,7 @@ export function AddSlotDialog({
 
   const handleClose = useCallback(() => {
     setSelectedMenuId('')
+    setSelectedCompanyId('')
     setStartDate('')
     setStartTime('')
     setEndDate('')
@@ -165,6 +170,7 @@ export function AddSlotDialog({
     try {
       await onSubmit({
         service_menu_id: selectedMenuId,
+        company_id: selectedCompanyId || undefined,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
       })
@@ -223,6 +229,29 @@ export function AddSlotDialog({
               {error}
             </div>
           )}
+
+          {/* 対象法人 */}
+          <div>
+            <label htmlFor="company-id" className="block text-sm font-medium text-gray-700 mb-1">
+              対象法人
+            </label>
+            <select
+              id="company-id"
+              value={selectedCompanyId}
+              onChange={(e) => setSelectedCompanyId(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">全法人公開（誰でも予約可能）</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name} 専用
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              特定の法人専用にする場合は法人を選択してください
+            </p>
+          </div>
 
           {/* 施術メニュー */}
           <div>

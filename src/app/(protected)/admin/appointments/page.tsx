@@ -328,6 +328,7 @@ export default async function AdminAppointmentsPage({ searchParams }: PageProps)
                             appointmentId={appointment.id}
                             slotId={appointment.slot_id}
                             status={appointment.status}
+                            startTime={slot.start_time}
                           />
                         </td>
                       </tr>

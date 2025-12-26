@@ -49,6 +49,10 @@ export default async function EditTreatmentReportPage({ params }: PageProps) {
         companies (
           name
         ),
+        users!appointments_user_id_fkey (
+          full_name,
+          id
+        ),
         available_slots (
           start_time,
           end_time,
@@ -150,11 +154,9 @@ export default async function EditTreatmentReportPage({ params }: PageProps) {
             </div>
             <div className="flex">
               <span className="w-32 font-medium text-gray-700">社員名:</span>
-              <span className="text-gray-900">{appointment.employee_name}</span>
-            </div>
-            <div className="flex">
-              <span className="w-32 font-medium text-gray-700">社員ID:</span>
-              <span className="text-gray-900">{appointment.employee_id}</span>
+              <span className="text-gray-900">
+                {Array.isArray(appointment.users) ? appointment.users[0]?.full_name : appointment.users?.full_name || appointment.employee_name || '不明'}
+              </span>
             </div>
             <div className="flex">
               <span className="w-32 font-medium text-gray-700">施術日時:</span>

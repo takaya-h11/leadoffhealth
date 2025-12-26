@@ -25,7 +25,7 @@ interface CalendarEvent {
   end: Date
   resource: {
     therapistName: string
-    status: 'available' | 'pending' | 'booked' | 'cancelled'
+    status: 'available' | 'my_booking' | 'company_booking' | 'other_booking'
     serviceMenuName: string
     companyName?: string
     employeeName?: string
@@ -46,9 +46,9 @@ export function ScheduleCalendar({ events, onEventClick, onSlotClick }: Schedule
     const { status } = event.resource
 
     let backgroundColor = '#10b981' // green - available
-    if (status === 'pending') backgroundColor = '#f59e0b' // yellow - pending
-    if (status === 'booked') backgroundColor = '#3b82f6' // blue - booked
-    if (status === 'cancelled') backgroundColor = '#6b7280' // gray - cancelled
+    if (status === 'my_booking') backgroundColor = '#2563eb' // dark blue - my booking
+    if (status === 'company_booking') backgroundColor = '#9ca3af' // gray - company booking (unavailable)
+    if (status === 'other_booking') backgroundColor = '#9ca3af' // gray - other company booking (unavailable)
 
     return {
       style: {
@@ -207,16 +207,12 @@ export function ScheduleCalendar({ events, onEventClick, onSlotClick }: Schedule
           <span>予約可能</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="h-4 w-4 rounded bg-yellow-500"></div>
-          <span>承認待ち</span>
+          <div className="h-4 w-4 rounded" style={{ backgroundColor: '#2563eb' }}></div>
+          <span>自分の予約</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="h-4 w-4 rounded bg-blue-500"></div>
-          <span>予約確定</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="h-4 w-4 rounded bg-gray-500"></div>
-          <span>キャンセル</span>
+          <div className="h-4 w-4 rounded bg-gray-400"></div>
+          <span>予約不可</span>
         </div>
       </div>
     </div>

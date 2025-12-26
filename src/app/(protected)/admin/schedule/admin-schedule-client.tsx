@@ -13,7 +13,7 @@ interface CalendarEvent {
   end: Date
   resource: {
     therapistName: string
-    status: 'available' | 'pending' | 'booked' | 'cancelled'
+    status: 'available' | 'my_booking' | 'company_booking' | 'other_booking'
     serviceMenuName: string
     companyName?: string
     employeeName?: string
@@ -26,12 +26,18 @@ interface ServiceMenu {
   duration_minutes: number
 }
 
+interface Company {
+  id: string
+  name: string
+}
+
 interface AdminScheduleClientProps {
   events: CalendarEvent[]
   serviceMenus: ServiceMenu[]
+  companies: Company[]
 }
 
-export function AdminScheduleClient({ events, serviceMenus }: AdminScheduleClientProps) {
+export function AdminScheduleClient({ events, serviceMenus, companies }: AdminScheduleClientProps) {
   const router = useRouter()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -50,6 +56,7 @@ export function AdminScheduleClient({ events, serviceMenus }: AdminScheduleClien
 
   const handleAddSlot = async (data: {
     service_menu_id: string
+    company_id?: string
     start_time: string
     end_time: string
   }) => {
@@ -142,6 +149,7 @@ export function AdminScheduleClient({ events, serviceMenus }: AdminScheduleClien
           initialStartTime={selectedSlot?.start}
           initialEndTime={selectedSlot?.end}
           serviceMenus={serviceMenus}
+          companies={companies}
           onClose={() => {
             setIsAddDialogOpen(false)
             setSelectedSlot(null)
@@ -153,6 +161,8 @@ export function AdminScheduleClient({ events, serviceMenus }: AdminScheduleClien
           isOpen={isEditDialogOpen}
           event={selectedEvent}
           serviceMenus={serviceMenus}
+          currentUserId="admin"
+          currentUserRole="admin"
           onClose={() => {
             setIsEditDialogOpen(false)
             setSelectedEvent(null)

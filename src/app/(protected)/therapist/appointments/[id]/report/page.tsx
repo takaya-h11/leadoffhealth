@@ -38,7 +38,31 @@ export default async function TreatmentReportPage({ params, searchParams }: Page
     redirect('/dashboard?message=Therapist+info+not+found')
   }
 
-  // approved状態の予約を取得
+  // まず予約が存在するか確認（statusフィルターなし）
+  const { data: appointmentCheck, error: checkError } = await supabase
+    .from('appointments')
+    .select('id, status')
+    .eq('id', appointmentId)
+    .single()
+
+  console.log('🔍 [REPORT PAGE] Appointment existence check:', {
+    appointmentId,
+    exists: !!appointmentCheck,
+    status: appointmentCheck?.status,
+    checkError: checkError?.message || checkError,
+  })
+
+  if (!appointmentCheck) {
+    console.error('❌ [REPORT PAGE] Appointment not found with ID:', appointmentId)
+    redirect('/therapist/appointments?message=Appointment+not+found')
+  }
+
+  if (appointmentCheck.status !== 'approved' && appointmentCheck.status !== 'completed') {
+    console.error('❌ [REPORT PAGE] Appointment status is not approved or completed:', appointmentCheck.status)
+    redirect(`/therapist/appointments?message=Appointment+status+is+${appointmentCheck.status}`)
+  }
+
+  // approved または completed 状態の予約を取得
   const { data: appointment, error: appointmentError } = await supabase
     .from('appointments')
     .select(`
@@ -56,13 +80,17 @@ export default async function TreatmentReportPage({ params, searchParams }: Page
       ),
       companies (
         name
+      ),
+      users!appointments_user_id_fkey (
+        full_name,
+        id
       )
     `)
     .eq('id', appointmentId)
-    .eq('status', 'approved')
     .single()
 
   if (appointmentError || !appointment) {
+    console.error('❌ [REPORT PAGE] Appointment fetch error:', appointmentError)
     redirect('/therapist/appointments?message=Appointment+not+ready+for+report')
   }
 
@@ -83,7 +111,8 @@ export default async function TreatmentReportPage({ params, searchParams }: Page
     .single()
 
   if (existingRecord) {
-    redirect('/therapist/appointments?message=Report+already+submitted')
+    // 既にレポートがある場合は編集ページにリダイレクト
+    redirect(`/therapist/appointments/${appointmentId}/edit`)
   }
 
   // 症状マスター取得
@@ -126,11 +155,9 @@ export default async function TreatmentReportPage({ params, searchParams }: Page
             </div>
             <div className="flex">
               <span className="w-32 font-medium text-gray-700">社員名:</span>
-              <span className="text-gray-900">{appointment.employee_name}</span>
-            </div>
-            <div className="flex">
-              <span className="w-32 font-medium text-gray-700">社員ID:</span>
-              <span className="text-gray-900">{appointment.employee_id}</span>
+              <span className="text-gray-900">
+                {Array.isArray(appointment.users) ? appointment.users[0]?.full_name : appointment.users?.full_name || appointment.employee_name || '不明'}
+              </span>
             </div>
             <div className="flex">
               <span className="w-32 font-medium text-gray-700">施術日時:</span>

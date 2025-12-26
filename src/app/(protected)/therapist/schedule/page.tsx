@@ -26,6 +26,13 @@ export default async function TherapistSchedulePage() {
     .eq('is_active', true)
     .order('name')
 
+  // 全法人一覧を取得（法人専用枠を作成するため）
+  const { data: companies } = await supabase
+    .from('companies')
+    .select('id, name')
+    .eq('is_active', true)
+    .order('name')
+
   // 全整体師の空き枠と予約を取得（今後3ヶ月分）
   const threeMonthsLater = new Date()
   threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3)
@@ -48,6 +55,10 @@ export default async function TherapistSchedulePage() {
         id,
         status,
         employee_name,
+        user_id,
+        users!appointments_user_id_fkey (
+          full_name
+        ),
         companies:company_id (
           name
         )
@@ -68,21 +79,29 @@ export default async function TherapistSchedulePage() {
     const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
     const therapistName = therapistUser?.full_name || '不明'
 
-    // ステータスを判定（approved/completed の予約のみ表示）
-    let displayStatus: 'available' | 'pending' | 'booked' | 'cancelled' = 'available'
-    if (appointment && (appointment.status === 'approved' || appointment.status === 'completed')) {
-      displayStatus = 'booked'
-    } else if (slot.status === 'booked') {
-      // 予約があるがキャンセル済みの場合は available として扱う
-      displayStatus = 'available'
-    } else {
-      displayStatus = slot.status as 'available' | 'pending' | 'booked' | 'cancelled'
+    // ステータスを判定（整体師視点では全て company_booking として表示）
+    let displayStatus: 'available' | 'my_booking' | 'company_booking' | 'other_booking' = 'available'
+    if (appointment) {
+      // cancelledは空き枠として扱う
+      if (appointment.status === 'cancelled') {
+        displayStatus = 'available'
+      } else if (appointment.status === 'approved' || appointment.status === 'completed') {
+        // 整体師は全ての予約を company_booking（薄い青）で表示
+        displayStatus = 'company_booking'
+      }
     }
+
+    // 社員名を取得（users優先、なければemployee_name）
+    const appointmentUser = appointment ? (Array.isArray(appointment.users) ? appointment.users[0] : appointment.users) : null
+    const employeeName = appointmentUser?.full_name || appointment?.employee_name || '不明'
 
     let title = `${therapistName} - ${serviceMenu?.name || '不明'}`
     if (appointment && displayStatus !== 'available') {
       const company = Array.isArray(appointment.companies) ? appointment.companies[0] : appointment.companies
-      title = `${therapistName} - ${company?.name || '不明'} (${appointment.employee_name})`
+      const companyName = company?.name || '不明'
+
+      // 整体師カレンダーにも社員名を表示
+      title = `${therapistName} - ${companyName} (${employeeName})`
     }
 
     return {
@@ -95,10 +114,21 @@ export default async function TherapistSchedulePage() {
         status: displayStatus,
         serviceMenuName: serviceMenu?.name || '不明',
         companyName: appointment ? (Array.isArray(appointment.companies) ? appointment.companies[0]?.name : appointment.companies?.name) : undefined,
-        employeeName: appointment?.employee_name,
+        employeeName: employeeName,
+        appointmentUserId: appointment?.user_id,
+        appointmentId: appointment?.id,
+        slotId: slot.id,
       },
     }
   }) || []
 
-  return <ScheduleClient events={events} serviceMenus={serviceMenus || []} />
+  return (
+    <ScheduleClient
+      events={events}
+      serviceMenus={serviceMenus || []}
+      companies={companies || []}
+      currentUserId={user.id}
+      currentUserRole={userProfile?.role || ''}
+    />
+  )
 }

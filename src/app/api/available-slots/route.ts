@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     // リクエストボディを取得
     const body = await request.json()
-    const { service_menu_id, start_time, end_time } = body
+    const { service_menu_id, company_id, start_time, end_time } = body
 
     // バリデーション
     if (!service_menu_id || !start_time || !end_time) {
@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       .insert({
         therapist_id: therapist.id,
         service_menu_id,
+        company_id: company_id || null,
         start_time,
         end_time,
         status: 'available',

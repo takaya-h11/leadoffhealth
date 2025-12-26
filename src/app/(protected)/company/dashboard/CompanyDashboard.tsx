@@ -16,31 +16,22 @@ interface CompanyDashboardProps {
     serviceMenuName: string;
     employeeName: string;
   } | null;
-  pendingCount: number;
   monthAppointments: number;
   monthCompletedCount: number;
+  userRole: string;
 }
 
 export function CompanyDashboard({
   userName,
   companyName,
   nextAppointmentDetails,
-  pendingCount,
   monthAppointments,
   monthCompletedCount,
+  userRole,
 }: CompanyDashboardProps) {
   const { isModern } = useTheme();
 
   const stats = [
-    {
-      label: '承認待ち',
-      value: pendingCount,
-      icon: '⏳',
-      gradient: 'orange',
-      bgGradient: isModern ? 'from-yellow-100 to-orange-100' : 'bg-yellow-100',
-      valueColor: 'text-yellow-600',
-      iconColor: 'text-yellow-600',
-    },
     {
       label: '今月の予約',
       value: monthAppointments,
@@ -48,6 +39,7 @@ export function CompanyDashboard({
       gradient: 'blue',
       bgGradient: isModern ? 'from-blue-100 to-cyan-100' : 'bg-blue-100',
       iconColor: 'text-blue-600',
+      valueColor: 'text-gray-900',
     },
     {
       label: '今月の施術完了',
@@ -56,6 +48,7 @@ export function CompanyDashboard({
       gradient: 'green',
       bgGradient: isModern ? 'from-green-100 to-teal-100' : 'bg-green-100',
       iconColor: 'text-green-600',
+      valueColor: 'text-gray-900',
     },
   ];
 
@@ -93,7 +86,7 @@ export function CompanyDashboard({
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className={isModern ? 'text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent' : 'text-3xl font-bold text-gray-900'}>
-              法人担当者ダッシュボード
+              {userRole === 'employee' ? '整体利用者ダッシュボード' : '法人担当者ダッシュボード'}
             </h1>
             <p className={isModern ? 'mt-3 text-base text-gray-600 font-medium' : 'mt-2 text-sm text-gray-600'}>
               {companyName} - {userName}さん ✨
@@ -138,12 +131,6 @@ export function CompanyDashboard({
                     {nextAppointmentDetails.serviceMenuName}
                   </p>
                 </div>
-                <div className={`${isModern ? 'p-5 rounded-xl bg-white/50 backdrop-blur-sm' : ''}`}>
-                  <p className={`text-sm ${isModern ? 'text-blue-600 font-bold' : 'text-blue-700'}`}>対象社員</p>
-                  <p className={`${isModern ? 'text-xl font-bold text-gray-900 mt-2' : 'text-lg font-semibold text-blue-900 mt-1'}`}>
-                    {nextAppointmentDetails.employeeName}様
-                  </p>
-                </div>
               </div>
             </div>
           </ModernCard>
@@ -172,9 +159,9 @@ export function CompanyDashboard({
         )}
 
         {/* 統計カード */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
           {stats.map((stat, index) => (
-            <ModernCard key={index} gradient={isModern ? (stat.gradient as 'blue' | 'orange' | 'green' | 'purple') : undefined} hover>
+            <ModernCard key={index} gradient={isModern ? (stat.gradient as 'blue' | 'green') : undefined} hover>
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>

@@ -38,6 +38,9 @@ export default async function DashboardPage() {
     redirect('/therapist/dashboard')
   } else if (userProfile.role === 'company_user') {
     redirect('/company/dashboard')
+  } else if (userProfile.role === 'employee') {
+    // 整体利用者は法人ダッシュボードと同じUIを使用
+    redirect('/company/dashboard')
   }
 
   // Fallback: if no role is found, redirect to login

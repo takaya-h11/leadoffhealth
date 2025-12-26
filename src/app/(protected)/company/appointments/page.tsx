@@ -22,14 +22,14 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // 法人担当者権限チェック
+  // 法人担当者または整体利用者の権限チェック
   const { data: userProfile } = await supabase
     .from('users')
     .select('role, company_id')
     .eq('id', user.id)
     .single()
 
-  if (userProfile?.role !== 'company_user' || !userProfile.company_id) {
+  if ((userProfile?.role !== 'company_user' && userProfile?.role !== 'employee') || !userProfile.company_id) {
     redirect('/dashboard')
   }
 
@@ -58,7 +58,13 @@ export default async function CompanyAppointmentsPage({ searchParams }: PageProp
         full_name
       )
     `)
-    .eq('company_id', userProfile.company_id)
+
+  // employeeの場合は自分の予約のみ、company_userの場合は自社全員の予約
+  if (userProfile.role === 'employee') {
+    query = query.eq('user_id', user.id)
+  } else {
+    query = query.eq('company_id', userProfile.company_id)
+  }
 
   // ステータスでフィルター
   if (params.status) {

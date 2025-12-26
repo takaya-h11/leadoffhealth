@@ -34,7 +34,9 @@ export default function RootLayout({
         <ThemeProvider>
           <ConfirmationProvider>
             <Navbar />
-            {children}
+            <div className="pt-16">
+              {children}
+            </div>
           </ConfirmationProvider>
         </ThemeProvider>
       </body>

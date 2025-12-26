@@ -25,7 +25,7 @@ export default async function CompanyTreatmentHistoryPage({ searchParams }: Page
     .eq('id', user.id)
     .single()
 
-  if (userProfile?.role !== 'company_user' || !userProfile.company_id) {
+  if ((userProfile?.role !== 'company_user' && userProfile?.role !== 'employee') || !userProfile.company_id) {
     redirect('/dashboard')
   }
 
@@ -37,7 +37,11 @@ export default async function CompanyTreatmentHistoryPage({ searchParams }: Page
       appointments!inner (
         employee_name,
         employee_id,
+        user_id,
         company_id,
+        users!appointments_user_id_fkey (
+          full_name
+        ),
         companies (
           name
         ),
@@ -214,14 +218,17 @@ export default async function CompanyTreatmentHistoryPage({ searchParams }: Page
                   })
                   .filter(Boolean) as string[]
 
+                // 社員名を取得（users優先、なければemployee_name）
+                const appointmentUser = appointment ? (Array.isArray(appointment.users) ? appointment.users[0] : appointment.users) : null
+                const employeeName = appointmentUser?.full_name || appointment?.employee_name || '不明'
+
                 return (
                   <div key={treatment.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow">
                     <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                      {appointment?.employee_name || '不明'}
+                      {employeeName}
                     </h3>
                     <div className="mb-4 space-y-1 text-sm text-gray-600">
                       <div>整体師: {therapistUser?.full_name || '不明'}</div>
-                      <div>社員ID: {appointment?.employee_id || '不明'}</div>
                       <div>
                         日時:{' '}
                         {startTime

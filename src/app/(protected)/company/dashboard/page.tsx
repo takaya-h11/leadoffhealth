@@ -22,7 +22,7 @@ export default async function CompanyDashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (userProfile?.role !== 'company_user') {
+  if (userProfile?.role !== 'company_user' && userProfile?.role !== 'employee') {
     redirect('/dashboard')
   }
 
@@ -39,10 +39,14 @@ export default async function CompanyDashboardPage() {
   today.setHours(0, 0, 0, 0)
 
   // 次回予約（最も近い承認済み予約）
-  const { data: nextAppointment } = await supabase
+  // employeeロールの場合は自分の予約のみ、company_userは法人全体
+  let nextAppointmentQuery = supabase
     .from('appointments')
     .select(`
       *,
+      users!appointments_user_id_fkey (
+        full_name
+      ),
       available_slots (
         start_time,
         end_time,
@@ -61,35 +65,46 @@ export default async function CompanyDashboardPage() {
     .gte('available_slots.start_time', today.toISOString())
     .order('available_slots(start_time)')
     .limit(1)
-    .single()
 
-  // 承認待ちの予約
-  const { count: pendingCount } = await supabase
-    .from('appointments')
-    .select('*', { count: 'exact', head: true })
-    .eq('company_id', userProfile.company_id)
-    .eq('status', 'pending')
+  if (userProfile.role === 'employee') {
+    nextAppointmentQuery = nextAppointmentQuery.eq('user_id', user.id)
+  }
+
+  const { data: nextAppointment } = await nextAppointmentQuery.single()
 
   // 今月の利用状況
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1)
 
-  const { count: monthAppointments } = await supabase
+  // employeeロールの場合は自分の予約のみ、company_userは法人全体
+  let monthAppointmentsQuery = supabase
     .from('appointments')
-    .select('*', { count: 'exact', head: true })
+    .select('id, available_slots!inner(start_time)', { count: 'exact', head: true })
     .eq('company_id', userProfile.company_id)
     .gte('available_slots.start_time', monthStart.toISOString())
     .lt('available_slots.start_time', monthEnd.toISOString())
     .in('status', ['approved', 'completed'])
 
+  if (userProfile.role === 'employee') {
+    monthAppointmentsQuery = monthAppointmentsQuery.eq('user_id', user.id)
+  }
+
+  const { count: monthAppointments } = await monthAppointmentsQuery
+
   // 今月の施術完了数
-  const { count: monthCompletedCount } = await supabase
+  let monthCompletedQuery = supabase
     .from('appointments')
-    .select('*', { count: 'exact', head: true })
+    .select('id, available_slots!inner(start_time)', { count: 'exact', head: true })
     .eq('company_id', userProfile.company_id)
     .gte('available_slots.start_time', monthStart.toISOString())
     .lt('available_slots.start_time', monthEnd.toISOString())
     .eq('status', 'completed')
+
+  if (userProfile.role === 'employee') {
+    monthCompletedQuery = monthCompletedQuery.eq('user_id', user.id)
+  }
+
+  const { count: monthCompletedCount } = await monthCompletedQuery
 
   // 次回予約の詳細
   let nextAppointmentDetails = null
@@ -101,13 +116,17 @@ export default async function CompanyDashboardPage() {
     const therapistUser = Array.isArray(therapist?.users) ? therapist.users[0] : therapist?.users
     const serviceMenu = Array.isArray(slot?.service_menus) ? slot.service_menus[0] : slot?.service_menus
 
+    // 社員名を取得（users優先、なければemployee_name）
+    const appointmentUser = Array.isArray(nextAppointment.users) ? nextAppointment.users[0] : nextAppointment.users
+    const employeeName = appointmentUser?.full_name || nextAppointment.employee_name || '不明'
+
     nextAppointmentDetails = {
       id: nextAppointment.id,
       startTime: new Date(slot.start_time),
       endTime: new Date(slot.end_time),
       therapistName: therapistUser?.full_name || '不明',
       serviceMenuName: serviceMenu?.name || '不明',
-      employeeName: nextAppointment.employee_name,
+      employeeName: employeeName,
     }
   }
 
@@ -116,9 +135,9 @@ export default async function CompanyDashboardPage() {
       userName={userProfile?.full_name || user.email}
       companyName={company?.name || '不明'}
       nextAppointmentDetails={nextAppointmentDetails}
-      pendingCount={pendingCount || 0}
       monthAppointments={monthAppointments || 0}
       monthCompletedCount={monthCompletedCount || 0}
+      userRole={userProfile.role}
     />
   )
 }
